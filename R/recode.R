@@ -54,6 +54,10 @@ t2_data <- t2_data %>%
          Survey_Number = case_when(
            Interviewee_Respondent_Type %in% "Female member of HH" ~ paste0("HH", Survey_Number, "-Female"),
            Interviewee_Respondent_Type %in% "Male member of HH" ~ paste0("HH", Survey_Number, "-Male"),
+         ),
+         Village = case_when(
+           !is.na(Village_English) ~ Village_English,
+           TRUE ~ Village
          )) %>% 
   mutate(across(all_of(t2_numeric_cols), as.character)) %>% 
   mutate(across(all_of(t2_numeric_cols), remove_98_99))
@@ -119,12 +123,25 @@ t2_immunization <- t2_immunization %>%
 t2_other <- t2_other %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
   relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+t2_other <- t2_other %>% 
+  left_join(t2_data %>% 
+              select(B6_Value_Other=Did_You_Your_Household_Member_Receive_The_Following_Health_Services_In_The_Past_6_Months_Other, KEY), 
+            by=c("PARENT_KEY"="KEY")) %>% 
+  relocate(B6_Value_Other, .after=B6_Value) %>% 
+  mutate(B6_Value_Other = case_when(
+    B6_Value %notin% "Other" & !is.na(B6_Value_Other) ~ NA_character_,
+    TRUE ~ B6_Value_Other
+  ))
 
 ## Tool 3 ------------------------------------------------------------------------------------------
 t3_tool <- "input/tools/HER+ESS+Tool+3_+Community+Actors+Survey+Tool.xlsx"
 t3_data <- t3_data %>% 
   mutate(Starttime = as.POSIXct(Starttime, format="%a %b %d %Y %H:%M:%S"),
-         Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"))
+         Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"),
+         Village = case_when(
+           !is.na(Village_English) ~ Village_English,
+           TRUE ~ Village
+         ))
 t3_data <- update_links(data=t3_data, tool_path = t3_tool)
 
 # ## Tool 4 ------------------------------------------------------------------------------------------
@@ -154,3 +171,4 @@ rm(t1.1_tool, t1.2_tool, remove_98_99,t1.3_tool, t2_tool, t3_tool, t2_data_sub
    # t4_checklist_tool,infra_doc_link_cols,infra_env_link_cols, infra_feat_link_cols, t4_tool,
    # infra_elem_link_cols, infra_link_cols, checklist_link_cols,
    )
+

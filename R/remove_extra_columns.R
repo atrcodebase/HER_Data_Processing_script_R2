@@ -67,8 +67,7 @@ t2_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephone
                    "HH_Immunization_Member6", "HH_Immunization_Member7", "HH_Immunization_Member8", 
                    "HH_Immunization_Member9", "HH_Immunization_Member10", "instanceID", 
                    "formdef_version", "review_status", "review_quality", "review_comments", 
-                   "review_corrections", "qa_status")
-
+                   "review_corrections", "qa_status", "Village_English")
 # Tool 3
 t3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephonenum", 
                    "Username", "TA", "AA1", "Geopoint1-Altitude", "Geopoint1-Accuracy", 
@@ -78,7 +77,7 @@ t3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephone
                    "If_not_a_first_Site_Visit_state_Original_Site_Visit_ID", "Reporting_Period", 
                    "AA2", "Contact_num1", "Contact_num2", "AA3", "AA4", "instanceID", 
                    "formdef_version", "review_status", "review_quality", "review_comments", 
-                   "review_corrections", "qa_status")
+                   "review_corrections", "qa_status", "Village_English")
 # Tool 4
 t4_extra_cols <- c("instanceID", "formdef_version", "review_status", "review_quality", 
   "review_comments", "review_corrections", "SET-OF-Representatives", "SET-OF-Documents", 

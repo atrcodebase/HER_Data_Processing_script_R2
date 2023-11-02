@@ -112,7 +112,7 @@ source("R/attach_labels.R")
 
 ## Recode ------------------------------------------------------------------------------------------
 # file.edit("R/recode.R")
-source("R/recode.R") 
+source("R/recode.R") # Check Village_Enlglish in Tool 2, 3
 
 # produce qa-backlog -------------------------------------------------------------------------------
 qa_log_sub <- qa_log %>% select(Tool, qa_status=`Final QA Status`, KEY)
@@ -159,10 +159,6 @@ source("R/filter_approved_data.R")
 # # file.edit("R/join_infra_photos.R")
 # source("R/join_infra_photos.R")
 
-# generate data with missing translations ----------------------------------------------------------
-# file.edit("R/check_missing_translation.R")
-source("R/check_missing_translation.R")
-
 ## Red Flags ---------------------------------------------------------------------------------------
 # file.edit("R/Red_Flags.R")
 # source("R/Red_Flags.R")
@@ -182,6 +178,10 @@ source("R/dataset_responses_check.R")
 ## Remove Extra columns ----------------------------------------------------------------------------
 # file.edit("R/remove_extra_columns.R")
 source("R/remove_extra_columns.R")
+
+# generate data with missing translations ----------------------------------------------------------
+# file.edit("R/check_missing_translation.R")
+source("R/check_missing_translation.R")
 
 # Export -------------------------------------------------------------------------------------------
 ## Tool 1.1

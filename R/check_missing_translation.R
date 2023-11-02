@@ -86,28 +86,13 @@ t3_missing_log <- log_questions(data=t3_data_filtered, columns=t3_audio_cols, co
 
 ## Log Missing Translation -------------------------------------------------------------------------
 excluded_cols <- c("Province_DariPashto", "District_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
-                   "Contact_num2", "Village", "Village_DariPashto", "Correct_Name", 
-                   "HF_Catchment_Area_Village", "Please_Provide_Explanation", "Selected_HH_Member_Label", 
-                   "Please_Elaborate_On_Your_Response", 
-                   "Used_Different_HF_Please_Elaborate_On_Your_Response", "Why_Not_Satisfied_Please_Elaborate_On_Your_Response", 
-                   "Injury_Related_Care_Can_You_Please_Tell_Me_Why_The_Household_Member_Who_Was_Injured_Or_Physically_Hurt_Recently_Did_Not_Visit_HF_In_The_Catchment_Area_A_Different_Health_Facility_To_Treat_His_Her_Injury_Other", 
-                   "Injury_Related_Care_Why_Choose_Different_HF", 
-                   "Pregnancy_Related_Care_Why_Not_Satisfied", "ANC_PNC_Why_Did_Not_Go_To_A_Health_Facility_For_An_Antenatal_Visit", 
-                   "ANC_PNC_Then_What_Type_Of_Health_Facility_Did_The_Household_Member_Who_Was_Recently_Pregnant_In_The_Past_6_Months_For_An_Antenatal_Visit_Other", 
-                   "PC_Selected_HH_Member_Label", 
-                   "Preventative_Care_Why_Not_Satisfied", "Please_Elaborate_On_Your_Response_And_Give_As_Many_Details_As_Possible_Why_Or_Why_Not_Your_Household_Has_Has_Not_The_Same_Access_To_The_Health_Services_In_The_Nearest_Health_Facility_To_Your_Community", 
-                   "Why_Please_Elaborate_On_Your_Response_And_Give_As_Many_Details_As_Possible_Discremination", 
-                   "Can_You_Please_Tell_Me_What_You_Know_About_It_U_Report", "Can_You_Please_Tell_Me_About_The_Pamphlet_Sms_Or_Any_Other_Resources_You_Have_Heard_For_Women_Or_Girls_To_Seek_Help_Or_Get_Information_On_Womens_Family_Health_And_Well_Being", 
-                   "Is_There_Anything_Else_Youd_Like_To_Add", "Can_You_Please_Tell_Me_What_You_Know_About_The_Role_Of_Community_Health_Workers", 
-                   "Can_You_Please_Describe_Them_To_Me", "We_Are_At_The_End_Of_The_Interview_Would_Like_To_Add_Any_Comments_Concerns_Or_Suggestions_For_Better_Health_Service_Delivery_And_Or_Community_Engagement_With_Health_Facilities", 
-                   "HH_Illness_Member1", "HH_Illness_Member2", "HH_Illness_Member3", 
-                   "HH_Illness_Member4", "HH_Illness_Member5", "HH_Illness_Member6", 
-                   "HH_Illness_Member7", "HH_Illness_Member8", "HH_Illness_Member9", 
-                   "HH_Illness_Member10", "HH_Immunization_Member1", "HH_Immunization_Member2", 
-                   "HH_Immunization_Member3", "HH_Immunization_Member4", "HH_Immunization_Member5", 
-                   "HH_Immunization_Member6", "HH_Immunization_Member7", "HH_Immunization_Member8", 
-                   "HH_Immunization_Member9", "HH_Immunization_Member10", "Passcode_correct[1]/Introduction_And_Consent[1]/Consent_Female_Group[1]/Section_B6_Other[1]/Other_Service_Name", 
-                   "Illness_Name", "Immu_Name", "B6_Label")
+            "Resp_Name", "Surveyor_Name", "Province_DariPashto", "District_DariPashto", 
+            "HF_Name_based_on_Sample_DariPashto", "Resp_Name", "Surveyor_Name", 
+            "Province_DariPashto", "District_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
+            "Province_DariPashto", "District_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
+            "Village", "Province_DariPashto", "District_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
+            "Please_Take_Photo_Of_The_Vaccination_Card_2_QA", "Please_Take_A_Photo_Of_Door_Tag_From_The_Selected_Household_QA", 
+            "review_comments", "B6_Value_Other")
 
 missing_translation_log <- rbind(
   missing_translation(data = hf_t1_data_wide, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 1.1"),
