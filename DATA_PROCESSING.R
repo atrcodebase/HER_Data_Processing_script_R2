@@ -25,7 +25,7 @@ t2_data <- t2_data %>%
            ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1...437 # Main question
   )
 
-# read qa-log, correction log, and translation log -------------------------------------------
+  # read qa-log, correction log, and translation log -------------------------------------------
 url1 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTod-F0fcKUp28i0e0mM_Wm5FiwiyUjtnBw-BfMnDIabgfAVeCiPpYdvaNFc1TurMRXxguXJZ8L6Pbd/pub?" # Tools 1.1, 1.2, 1.3, 3
 url2 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vQsMoH1gFF-hH_X5A-0ZmPTrsH5GRwskbmsCqF6FjvsaaZKfenHaka1wcHaxMCCnbQCJHXWWryBlWAy/pub?" # Tool 2
 qa_log1 <- readr::read_csv(paste0(url1, "gid=473078450&single=true&output=csv"), col_types = "c")
@@ -37,6 +37,7 @@ correction_log3 <- readr::read_csv(paste0(url1, "gid=797781638&single=true&outpu
 correction_log2 <- readr::read_csv(paste0(url2, "gid=758688462&single=true&output=csv"), col_types = "c")
 rejection_log1 <- readr::read_csv(paste0(url1, "gid=1224153730&single=true&output=csv"), col_types = "c")
 rejection_log2 <- readr::read_csv(paste0(url2, "gid=1722425176&single=true&output=csv"), col_types = "c")
+translation_log <- readr::read_csv(paste0(url1, "gid=187815952&single=true&output=csv"), col_types = "c")
 
 # Merge logs
 qa_log <- plyr::rbind.fill(qa_log1, qa_log2 %>% mutate(Tool="Tool 2"))
@@ -51,7 +52,6 @@ rejection_log <- plyr::rbind.fill(
   rejection_log1,
   rejection_log2
 )
-# translation_log <- readr::read_csv(paste0(url, "gid=1020194195&single=true&output=csv"), col_types = "c")
 
 # rm(url1, url2, url3, correction_log1.1, correction_log1.2, correction_log1.3, correction_log3, 
 #    correction_log2, qa_log1, qa_log2)
@@ -101,14 +101,14 @@ source("R/check_relevancy_rules.R")
 # file.edit("R/attach_labels.R")
 source("R/attach_labels.R")
 
-# # apply Translation log ----------------------------------------------------------------------------
-# translation_log %>% count(Tool, Tab_Name)
-# # file.edit("R/apply_translation_log.R")
-# source("R/apply_translation_log.R")
-# if(nrow(translation_log_discrep) !=0){
-#   print("Correction Logs not applied -------------------")
-#   correction_log_discrep
-# }
+# apply Translation log ----------------------------------------------------------------------------
+translation_log %>% count(Tool, Tab_Name)
+# file.edit("R/apply_translation_log.R")
+source("R/apply_translation_log.R")
+if(nrow(translation_log_discrep) !=0){
+  print("Correction Logs not applied -------------------")
+  correction_log_discrep
+}
 
 ## Recode ------------------------------------------------------------------------------------------
 # file.edit("R/recode.R")
