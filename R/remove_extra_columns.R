@@ -7,14 +7,16 @@ t1.1_extra_cols <- c(t1.1_caption_cols, "Passcode", "Deviceid", "Subscriberid", 
                      "Province_filter", "Surveyor_Name", "Line_Ministry_Name", "Line_Ministry_Project_Id", 
                      "Line_Ministry_SubProject_Id", "Line_Ministry_Sub_Project_Name_And_Description", 
                      "Type_Of_Implementing_Partner", "If_not_a_first_Site_Visit_state_Original_Site_Visit_ID", 
-                     "Reporting_Period", "Sample_info_correct", "AA1", "Resp_Name", 
+                     "Reporting_Period", "Sample_info_correct", "AA1", "Resp_Name", "comments",
                      "Contact_number1_of_Respondent", "Contact_number2_of_Respondent", 
                      "SET-OF-Injuries_Details", "SET-OF-Fatalities_Details", "SET-OF-Incidents", 
                      "Contact_Number_1_Of_The_Staff", "Contact_Number_2_Of_The_Staff", 
                      "AA2", "Contact_number1_of_GBV_Respondent", "Contact_number2_of_GBV_Respondent", 
                      "AA3", "Contact_number1_of_HWCHS_Respondent", "Contact_number2_of_HWCHS_Respondent", 
                      "instanceID", "formdef_version", "review_status", "review_quality", 
-                     "review_comments", "review_corrections", "qa_status", "Instances_Count")
+                     "review_comments", "review_corrections", "qa_status", "Instances_Count", "Passcode_correct[1]/Location_Type",
+                     "Province_DariPashto", "District_DariPashto", "HF_Name_based_on_Sample_DariPashto",
+                     "Survey_Language", "Geopoint1-Latitude",	"Geopoint1-Longitude")
 # Tool 1.2
 t1.2_caption_cols <- names(hf_t2_data_wide)[grepl("caption$", names(hf_t2_data_wide), ignore.case = TRUE)] # All question ending with Caption
 t1.2_extra_cols <- c(t1.2_caption_cols, "Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephonenum",
@@ -24,9 +26,11 @@ t1.2_extra_cols <- c(t1.2_caption_cols, "Passcode", "Deviceid", "Subscriberid", 
                      "Type_Of_Implementing_Partner", "If_not_a_first_Site_Visit_state_Original_Site_Visit_ID",
                      "Reporting_Period", "AA1", "Resp_Name", "Contact_number1_of_Respondent",
                      "Contact_number2_of_Respondent", "SET-OF-Photos_Of_Handwashing_Stations",
-                     "How_Is_Mixed_Waste_Disposed_7777", "instanceID", "formdef_version",
+                     "How_Is_Mixed_Waste_Disposed_7777", "instanceID", "formdef_version", "comments",
                      "review_status", "review_quality", "review_comments", "review_corrections",
-                     "SET-OF-Photos_Of_Handwashing_Stations", "qa_status")
+                     "SET-OF-Photos_Of_Handwashing_Stations", "qa_status", "Province_DariPashto", 
+                     "District_DariPashto", "HF_Name_based_on_Sample_DariPashto", "Survey_Language",
+                     "Passcode_correct[1]/Location_Type", "Geopoint1-Latitude",	"Geopoint1-Longitude")
 # Tool 1.3
 t1.3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephonenum", 
                      "Username", "Audio_Audit_Full", "TA", "Geopoint1-Altitude", "Geopoint1-Accuracy", 
@@ -35,8 +39,9 @@ t1.3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicepho
                      "Line_Ministry_Project_Id", "Line_Ministry_SubProject_Id", "Type_Of_Implementing_Partner", 
                      "If_not_a_first_Site_Visit_state_Original_Site_Visit_ID", "Reporting_Period", 
                      "Selfie_Photo_Caption", "Explanation_Paper_Photo_Caption", "Contact_num1", 
-                     "Contact_num2", "instanceID", "formdef_version", "review_status", 
-                     "review_quality", "review_comments", "review_corrections", "qa_status")
+                     "Contact_num2", "instanceID", "formdef_version", "review_status", "comments",
+                     "review_quality", "review_comments", "review_corrections", "qa_status", "Survey_Language", 
+                     "Geopoint1-Latitude",	"Geopoint1-Longitude")
 
 # Tool 2 
 t2_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephonenum", 
@@ -59,7 +64,7 @@ t2_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephone
                    "Survey_Language", "HH_Illness_Member1", "HH_Illness_Member2", 
                    "HH_Illness_Member3", "HH_Illness_Member4", "HH_Illness_Member5", 
                    "HH_Illness_Member6", "HH_Illness_Member7", "HH_Illness_Member8", 
-                   "HH_Illness_Member9", "HH_Illness_Member10", "HH_Inj_Member1", 
+                   "HH_Illness_Member9", "HH_Illness_Member10", "HH_Inj_Member1", "comments",
                    "HH_Inj_Member2", "HH_Inj_Member3", "HH_Inj_Member4", "HH_Inj_Member5", 
                    "HH_Inj_Member6", "HH_Inj_Member7", "HH_Inj_Member8", "HH_Inj_Member9", 
                    "HH_Inj_Member10", "HH_Immunization_Member1", "HH_Immunization_Member2", 
@@ -77,7 +82,8 @@ t3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephone
                    "If_not_a_first_Site_Visit_state_Original_Site_Visit_ID", "Reporting_Period", 
                    "AA2", "Contact_num1", "Contact_num2", "AA3", "AA4", "instanceID", 
                    "formdef_version", "review_status", "review_quality", "review_comments", 
-                   "review_corrections", "qa_status", "Village_English")
+                   "review_corrections", "qa_status", "Village_English", "Survey_Language", 
+                   "Geopoint1-Latitude",	"Geopoint1-Longitude", "comments")
 # Tool 4
 t4_extra_cols <- c("instanceID", "formdef_version", "review_status", "review_quality", 
   "review_comments", "review_corrections", "SET-OF-Representatives", "SET-OF-Documents", 

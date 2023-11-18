@@ -102,7 +102,7 @@ source("R/check_relevancy_rules.R")
 source("R/attach_labels.R")
 
 # apply Translation log ----------------------------------------------------------------------------
-translation_log %>% count(Tool, Tab_Name)
+translation_log %>% count(Tool)
 # file.edit("R/apply_translation_log.R")
 source("R/apply_translation_log.R")
 if(nrow(translation_log_discrep) !=0){
@@ -265,7 +265,7 @@ export_datasets(t3_list_filtered, "output/client_data/HER_ESS_Tool_3_Community_L
 ## export additional files
 writexl::write_xlsx(correction_log, "output/correction_log.xlsx", format_headers = F) # correction
 writexl::write_xlsx(correction_log_issues, "output/correction_log_issues.xlsx", format_headers = F) # correction log issues
-# writexl::write_xlsx(translation_log_issues, "output/translation_log_issues.xlsx", format_headers = F) # correction log issues
+writexl::write_xlsx(translation_log_issues, "output/translation_log_issues.xlsx", format_headers = F) # correction log issues
 writexl::write_xlsx(correction_log_discrep, "output/correction_log_discrep.xlsx", format_headers = F)
 writexl::write_xlsx(missing_translation_log, "output/untranslated_log.xlsx", format_headers = F)
 writexl::write_xlsx(relevancy_issues, "output/relevancy_issues.xlsx", format_headers = F)

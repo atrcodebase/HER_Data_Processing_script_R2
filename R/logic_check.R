@@ -34,6 +34,12 @@ t1.1_count_mismatch <- rbind(
   filter(repeat_sheet_count %notin% main_sheet_count & !(is.na(repeat_sheet_count) & is.na(main_sheet_count))) %>% mutate(Tool="Tool 1.1")
 
 
+HF_Type_issue <- hf_t1_data_wide %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample, HF_Type_based_on_sample, HF_Type_Based_on_SV) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample) %>% 
+  mutate(issue="Same HF has two differnet HF_Type_Based_on_SV")
+write.xlsx(HF_Type_issue, "output/Multiple_HF_Type_T1.xlsx")
+
 t1.1_logical_issues <- rbind(
   hf_t1_data %>%
     filter((How_Many_Male_Chws_Are_Active_Under_This_Health_Facility+How_Many_Female_Chws_Are_Active_Under_This_Health_Facility) >
@@ -59,11 +65,11 @@ mutate(issue="Month shouldnt be more than 12",
 ) %>% mutate(Tool="Tool 1.1")
 
 ## Tool 1.2  ---------------------------------------------------------------------------------------
-# hf_t2_data_filtered %>%
+# hf_t2_data_wide %>%
 #   rowwise() %>%
 #   filter(How_Many_Handwashing_Stations_Are_There_In_This_Facility %notin% Photos_Of_Handwashing_Stations_count) %>%
 #   select(How_Many_Handwashing_Stations_Are_There_In_This_Facility, Photos_Of_Handwashing_Stations_count)
-
+# 
 
 t1.2_count_mismatch <- hf_t2_photos %>%
   count(KEY=PARENT_KEY, name="repeat_sheet_count", Sheet="Photos") %>%
@@ -81,6 +87,24 @@ t1.2_logical_issues <- rbind(
            Values = paste0(How_Many_Handwashing_Stations_Have_Functional_Water, " - ", Photos_Of_Handwashing_Stations_count)) %>% 
     select(Questions, Values, issue, KEY, qa_status)
 ) %>% mutate(Tool="Tool 1.1")
+
+## Tool 1.3  ---------------------------------------------------------------------------------------
+t1.3_logical_issues <- rbind(
+  hf_t3_data_filtered %>%
+    filter(For_How_Long_Have_You_Been_Working_At_This_Hf_Years > For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years) %>%
+    mutate(issue="The NC worked more years in the HF than the number of years she says she was a NC, plz double-check",
+           Questions = "For_How_Long_Have_You_Been_Working_At_This_Hf_Years - For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years",
+           Values = paste0(For_How_Long_Have_You_Been_Working_At_This_Hf_Years, " - ", For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years)) %>% 
+    select(Questions, Values, issue, KEY, qa_status),
+  hf_t3_data_filtered %>%
+    rowwise() %>% 
+    filter(Where_Did_You_Work_Before_As_NC %in% "I have been always working at this health facility as a nutrition counsellor" & 
+             For_How_Long_Have_You_Been_Working_At_This_Hf_Years != For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years) %>%
+    mutate(issue="She always worked in this HF as NC but her number of years as NC doesn't match number of years as NC",
+           Questions = "Where_Did_You_Work_Before_As_NC - For_How_Long_Have_You_Been_Working_At_This_Hf_Years - For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years",
+           Values = paste0(Where_Did_You_Work_Before_As_NC, " - ", For_How_Long_Have_You_Been_Working_At_This_Hf_Years, " - ", For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years)) %>% 
+    select(Questions, Values, issue, KEY, qa_status)
+) %>% mutate(Tool="Tool 1.3")
 
 ## Tool 2 ------------------------------------------------------------------------------------------
 t2_logical_issues <- rbind(
@@ -426,11 +450,16 @@ response_crossmatch <- full_join(
            Do_You_Agree_If_My_Female_Colleague_Interview_A_Female_Member_Of_Your_Household,
            Reason_for_noconsent_of_Female_Member_Interview) %>% 
     mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")),
+    # anti_join(duplicate_survey_numbers),
   t2_data_filtered %>%
     filter(Consent != "No" & Interviewee_Respondent_Type %in% "Female member of HH") %>%
     select(Key_female=KEY, Province, District, Village, HF_Code_based_on_sample, HF_Name_based_on_Sample, Survey_Number) %>%
-    mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female"))) %>%
+    mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")),
+    # anti_join(duplicate_survey_numbers),
+  by=c("Province", "District", "Village", "HF_Code_based_on_sample", "HF_Name_based_on_Sample", "Survey_Number")) %>%
   relocate(Key_female, .after = KEY)
+
+# response_crossmatch %>% janitor::get_dupes(KEY) %>% View
 
 missing_male_female_data <- rbind(
   response_crossmatch %>% 
@@ -482,44 +511,50 @@ rejec_approved <- rbind(
 )
 
 ## Check against Tools 1.1 and 1.2 -----------------------------------------------------------------
-#
-# hf_t1_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t2_data_wide$HF_Code_based_on_sample)
-# hf_t2_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+hf_t1_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t2_data_wide$HF_Code_based_on_sample)
+hf_t2_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
 
 # Tool 2 checks
-# t1_missing_HFs <- rbind(
-#   hf_t1_data_wide %>%
-#     filter(HF_Code_based_on_sample %notin% hf_t3_data_filtered$HF_Code_based_on_sample) %>%
-#     select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
-#     mutate(not_found_in = "Tool 1.3"),
-#   hf_t1_data_wide %>%
-#     filter(HF_Code_based_on_sample %notin% t2_data_filtered$HF_Code_based_on_sample) %>%
-#     select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
-#     mutate(not_found_in = "Tool 2"),
-#   hf_t1_data_wide %>%
-#     filter(HF_Code_based_on_sample %notin% t3_data_filtered$HF_Code_based_on_sample) %>%
-#     select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
-#     mutate(not_found_in = "Tool 3")
-# )
-# 
-# t1_missing_HFs <- t1_missing_HFs %>%
-#   group_by(HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>%
-#   mutate(not_found_in = paste0(not_found_in, collapse = " & ")) %>% unique()
+t1_missing_HFs <- rbind(
+  hf_t1_data_wide %>%
+    filter(HF_Code_based_on_sample %notin% hf_t3_data_filtered$HF_Code_based_on_sample) %>%
+    select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
+    mutate(not_found_in = "Tool 1.3"),
+  hf_t1_data_wide %>%
+    filter(HF_Code_based_on_sample %notin% t2_data_filtered$HF_Code_based_on_sample) %>%
+    select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
+    mutate(not_found_in = "Tool 2"),
+  hf_t1_data_wide %>%
+    filter(HF_Code_based_on_sample %notin% t3_data_filtered$HF_Code_based_on_sample) %>%
+    select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
+    mutate(not_found_in = "Tool 3")
+)
 
-# hf_t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
-# t2_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
-# t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+t1_missing_HFs <- t1_missing_HFs %>%
+  group_by(HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>%
+  mutate(not_found_in = paste0(not_found_in, collapse = " & ")) %>% unique()
+write.xlsx(t1_missing_HFs, "output/Tool1.1_HF_missing_in_other_tools.xlsx")
 
-## Check sample data
-# hf_t3_data_filtered %>%
-#   select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
-#   janitor::get_dupes(HF_Code_based_on_sample)
-# t2_data %>%
-#   select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
-#   janitor::get_dupes(HF_Code_based_on_sample)
-# t3_data_filtered %>%
-#   select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
-#   janitor::get_dupes(HF_Code_based_on_sample)
+hf_t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+t2_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+
+# Check sample data
+hf_t1_data_wide %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample)
+hf_t2_data_wide %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample)
+hf_t3_data_filtered %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample)
+t2_data %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample)
+t3_data_filtered %>%
+  select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% unique() %>%
+  janitor::get_dupes(HF_Code_based_on_sample)
 
 ## Check keys 
 if(any(duplicated(hf_t1_data_wide$KEY)) | any(duplicated(hf_t2_data_wide$KEY)) | 
@@ -532,6 +567,7 @@ if(any(duplicated(hf_t1_data_wide$KEY)) | any(duplicated(hf_t2_data_wide$KEY)) |
 logical_issues <- plyr::rbind.fill(
   t1.1_logical_issues,
   t1.2_logical_issues,
+  t1.3_logical_issues,
   t2_logical_issues
 )
 count_mismatch <- plyr::rbind.fill(
