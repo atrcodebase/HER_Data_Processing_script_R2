@@ -43,6 +43,26 @@ translation_log_issues <- translation_log_filtered %>%
 translation_log_filtered <- translation_log_filtered %>% 
   # filter(is.na(issue) & duplicates == FALSE) # Keeping duplicates for now
   filter(is.na(issue))
+
+## Tool 2: make "_Translation" columns character
+t2_audio_cols <- read_excel("input/tools/HER+ESS+Tool+2_+Household+Level+Surveys.xlsx", "survey", guess_max = 100000)
+t2_audio_cols <- t2_audio_cols %>%
+  filter(type %in% c("audio") & name %notin% "Please_Provide_Explanation") %>% pull(name)
+
+# Audio Translation cols with different spelling 
+t2_audio_cols <- c(
+  paste0(t2_audio_cols, "_Translation")[paste0(t2_audio_cols, "_Translation") %in% names(t2_data)],
+  # Different spellings
+  "ANC_PNC_Why_Not_Go_To_A_Health_Facility_For_An_Antenatal_Visit_Translation", 
+  "ANC_PNC_Why_Not_Satisfied__B4_Translation", 
+  "ANC_PNC_Why_Chose_A_Different_Health_Facility__B4_1_Translation", 
+  "Nature_of_Complaint_Please_Elaborate_On_Your_Response_Description", 
+  "Please_Explain_Why_You_Were_Not_Satisfied_With_The_Resolution_Description",
+  "Can_You_Please_Tell_Me_About_The_Pamphlet_Sms_Or_Any_Other_Resources_You_Have_Heard_For_Women_Or_Girls_To_Seek_Help_Or_Get_Information_On_Womens_Family_Health_And_Well_Being_Translation")
+# Conver to Character
+t2_data <- t2_data %>% 
+  mutate(across(all_of(t2_audio_cols), as.character))
+
 # apply the Translation log -------------------------------------------
 ## Tool 1.1
 hf_t1_data_copy <- hf_t1_data
@@ -210,7 +230,7 @@ translation_log_discrep <- translation_log_discrep %>%
 # remove extra objects -----------------------------------------------------------------------------
 rm(hf_t1_data_copy, hf_injuries_copy, hf_incidents_copy, hf_fatalities_copy, hf_t2_data_copy,
    hf_t3_data_copy, t2_data_copy, t3_data_copy, translation_log_filtered, tabs, t2_income_copy,
-   t2_illness_copy, t2_injuries_copy, t2_immunization_copy, t2_other_copy)
+   t2_illness_copy, t2_injuries_copy, t2_immunization_copy, t2_other_copy, t2_audio_cols)
 
 
 

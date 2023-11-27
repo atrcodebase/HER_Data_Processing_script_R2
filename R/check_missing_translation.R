@@ -52,7 +52,7 @@ t1.3_missing_log <-  rbind(
 
 ## Tool 2
 t2_tool <- read_excel("input/tools/HER+ESS+Tool+2_+Household+Level+Surveys.xlsx", "survey", guess_max = 100000)
-t2_audio_cols <- t2_tool %>% filter(type %in% c("audio") & name %notin% "Please_Provide_Explanation") %>% pull(name)
+t2_audio_cols <- t2_tool %>% filter(type %in% c("audio") & name %notin% "Please_Provide_Explanation") %>% pull(name) # Please_Provide_Explanation removed from R2
 # Audio Translation cols with different spelling 
 t2_audio_cols_diff <- list(
   "ANC_PNC_Why_Did_Not_Go_To_A_Health_Facility_For_An_Antenatal_Visit"="ANC_PNC_Why_Not_Go_To_A_Health_Facility_For_An_Antenatal_Visit_Translation", 
