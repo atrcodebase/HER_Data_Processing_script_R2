@@ -101,11 +101,11 @@ missing_translation_log <- rbind(
   missing_translation(data = hf_t3_data_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 1.3"),
   ## Tool 2
   missing_translation(data = t2_data_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
-  missing_translation(data = t2_income_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
-  missing_translation(data = t2_illness_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
-  missing_translation(data = t2_injuries_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
-  missing_translation(data = t2_immunization_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
-  missing_translation(data = t2_other_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 2"),
+  missing_translation(data = t2_income_filtered, KEY = "KEY_Unique", excluded_cols) %>% mutate(Tool = "Tool 2"),
+  missing_translation(data = t2_illness_filtered, KEY = "KEY_Unique", excluded_cols) %>% mutate(Tool = "Tool 2"),
+  missing_translation(data = t2_injuries_filtered, KEY = "KEY_Unique", excluded_cols) %>% mutate(Tool = "Tool 2"),
+  missing_translation(data = t2_immunization_filtered, KEY = "KEY_Unique", excluded_cols) %>% mutate(Tool = "Tool 2"),
+  missing_translation(data = t2_other_filtered, KEY = "KEY_Unique", excluded_cols) %>% mutate(Tool = "Tool 2"),
   ## Tool 3
   missing_translation(data = t3_data_filtered, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 3")
 )
