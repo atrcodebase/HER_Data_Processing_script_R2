@@ -25,7 +25,7 @@ t2_data <- t2_data %>%
            ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1...437 # Main question
   )
 
-  # read qa-log, correction log, and translation log -------------------------------------------
+# read qa-log, correction log, and translation log -------------------------------------------
 url1 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTod-F0fcKUp28i0e0mM_Wm5FiwiyUjtnBw-BfMnDIabgfAVeCiPpYdvaNFc1TurMRXxguXJZ8L6Pbd/pub?" # Tools 1.1, 1.2, 1.3, 3
 url2 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vQsMoH1gFF-hH_X5A-0ZmPTrsH5GRwskbmsCqF6FjvsaaZKfenHaka1wcHaxMCCnbQCJHXWWryBlWAy/pub?" # Tool 2
 qa_log1 <- readr::read_csv(paste0(url1, "gid=473078450&single=true&output=csv"), col_types = "c")
@@ -89,7 +89,7 @@ if(nrow(correction_log_discrep) !=0){
   correction_log_discrep
 }
 
-# ## Remove Rejected data ----------------------------------------------------------------------------
+## Remove Rejected data ----------------------------------------------------------------------------
 # # file.edit("R/remove_rejected_data.R")
 source("R/remove_rejected_data.R")
 

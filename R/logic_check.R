@@ -343,6 +343,13 @@ t2_logical_issues <- rbind(
            Questions = "Have_You_Someone_In_Your_Household_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months - Respondent_Age - Selected_HH_Member_Age_Immun - Gender_Of_Interviewee - Selected_HH_Member_Gender_Immun",
            Values = paste0(Have_You_Someone_In_Your_Household_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months, " - ",
                            Respondent_Age, " - ", Selected_HH_Member_Age_Immun_Years, " - ", Gender_Of_Interviewee, " - ", Selected_HH_Member_Gender_Immun)) %>% 
+    select(Questions, Values, issue, KEY, qa_status),
+  # Immunization Age not provided 
+  t2_immunization_filtered %>% 
+    filter(Age_Of_The_Member_Who_Received_In_Years == 0 & Age_Of_The_Member_Who_Received_In_Months == 0) %>% 
+    mutate(issue = "Both shouldn't be 0",
+           Questions = "Age_Of_The_Member_Who_Received_In_Years - Age_Of_The_Member_Who_Received_In_Months",
+           Values = paste0(Age_Of_The_Member_Who_Received_In_Years, " - ", Age_Of_The_Member_Who_Received_In_Months), qa_status="Approved") %>% 
     select(Questions, Values, issue, KEY, qa_status)
 )
 

@@ -72,7 +72,8 @@ t2_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephone
                    "HH_Immunization_Member6", "HH_Immunization_Member7", "HH_Immunization_Member8", 
                    "HH_Immunization_Member9", "HH_Immunization_Member10", "instanceID", 
                    "formdef_version", "review_status", "review_quality", "review_comments", 
-                   "review_corrections", "qa_status", "Village_English")
+                   "review_corrections", "qa_status", "Village_English", "End_Comments",	
+                   "End_Comments_Translation", "Geopoint1-Latitude",	"Geopoint1-Longitude")
 # Tool 3
 t3_extra_cols <- c("Passcode", "Deviceid", "Subscriberid", "Simid", "Devicephonenum", 
                    "Username", "TA", "AA1", "Geopoint1-Altitude", "Geopoint1-Accuracy", 
