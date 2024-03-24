@@ -48,21 +48,6 @@ t2_other <- t2_other %>%
 t3_data <- t3_data %>% 
   filter(qa_status %notin% rejected_qa_status & KEY %notin% rejection_log$KEY_Unique)
 
-# ## Tool 4 ------------------------------------------------------------------------------------------
-# infra_data <- infra_data %>%
-#   filter(review_status %notin% rejected_qa_status)
-# 
-# infra_rep <- infra_rep %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_doc <- infra_doc %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_env <- infra_env %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_feat <- infra_feat %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_elem <- infra_elem %>%
-#   filter(PARENT_KEY %in% infra_feat$KEY) # Parent is Features
-
 ## Remove extra objects ----------------------------------------------------------------------------
 rm(rejected_qa_status)
 

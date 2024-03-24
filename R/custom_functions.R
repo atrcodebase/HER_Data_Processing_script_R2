@@ -35,6 +35,7 @@ apply_log <- function (data, log, data_KEY = "KEY", log_columns = c(question = "
   }
 }
 
+# Compares dataframes and logs the changes
 compare_dt <- function (df1, df2, unique_id_df1, unique_id_df2, compare_all = TRUE) 
 {
   if (compare_all == FALSE) {
@@ -68,17 +69,7 @@ compare_dt <- function (df1, df2, unique_id_df1, unique_id_df2, compare_all = TR
 }
 
 # Relevancy Function -------------------------------------------------------------------------------
-check_relevancy_rules <- function(data, tool_relevancy, sheet_name){
-  # ## test
-  # data= t2_immunization_joined %>% filter(KEY %in% c("uuid:03b1e290-991f-4a91-aa1e-ac1213aca84b/Passcode_correct-Introduction_And_Consent-Consent_Female_Group-Section_B_5_Preventative_Care_Immunizations_Vaccinations-Immunization_Details[3]",
-  #                                                                                                                 "uuid:03b1e290-991f-4a91-aa1e-ac1213aca84b/Passcode_correct-Introduction_And_Consent-Consent_Female_Group-Section_B_5_Preventative_Care_Immunizations_Vaccinations-Immunization_Details[4]"))
-  # tool_relevancy=t2_tool_relevancy
-  # sheet_name="Immunization_Details"
-  # # questions="If_No_Checklist_Of_Minimum_Standards_Available_Why"
-  # questions <- tool_relevancy$name
-  # question_i <- questions %in% "What_Immunizations_Vaccinations_Did_Each_Of_Your_Household_Members_Receive_In_The_Past_6_Months" %>% which()
-  # # question_i=209
-  # #
+check_relevancy_rules <- function(data, tool_relevancy, sheet_name, KEY="KEY"){
   # initiate Log
   `%notin%` <- Negate(`%in%`)
   relevancy_log <- data.frame()
@@ -110,31 +101,31 @@ check_relevancy_rules <- function(data, tool_relevancy, sheet_name){
     
     ## Flag issues
     # Rows where Question has a value but relevant question does not apply 
-    flagged_rows <- which(!is.na(data[[question]]) & eval(parse(text=conditional_str_negated)))
+    flagged_rows <- which(data[[question]] %notin% c(NA, "", NaN) & eval(parse(text=conditional_str_negated)))
     # Rows where Relevant Question applies but the actual question is null
     if(check_reverse){
       flagged_rows <- c(
         flagged_rows,
-        which(is.na(data[[question]]) & eval(parse(text=conditional_string)))
+        which(data[[question]] %in% c(NA, "", NaN) & eval(parse(text=conditional_string)))
       )}
     
-    # data <- data[flagged_rows, c("KEY",relevant_question)]
-  
     # Log if rows are flagged
     len_flagged <- length(flagged_rows)
     if(len_flagged > 0){
       # Get the values of relevant questions
-      relevant_values <- data[flagged_rows, c("KEY",relevant_question)] %>%
-        pivot_longer(-KEY, names_to = "cols", values_to = "value", values_transform=as.character) %>% 
-        group_by(KEY) %>% mutate(total = paste0(value, collapse = " - "), value=NULL, cols=NULL) %>% # Summarize messed up the group order
+      relevant_values <- data[flagged_rows, c(KEY,relevant_question)] %>%
+        pivot_longer(-all_of(KEY), names_to = "cols", values_to = "value", values_transform=as.character) %>% 
+        group_by(across(KEY)) %>% mutate(total = paste0(value, collapse = " - "), value=NULL, cols=NULL) %>% # Summarize messed up the group order
         ungroup() %>% unique() %>% pull(total)
       
-      log <- data.frame(KEY=data$KEY[flagged_rows],
+      log <- data.frame(KEY=data[[KEY]][flagged_rows],
                         question=rep(question, len_flagged),
                         value=data[[question]][flagged_rows],
                         relevancy_rule=rep(relevancy_sub$relevance_rule[1], len_flagged),
                         relevant_question=rep(paste0(relevant_question, collapse = " - "), len_flagged),
-                        relev_value=relevant_values)
+                        relev_value=relevant_values,
+                        sheet=sheet_name)
+      # qa_status=data$qa_status[flagged_rows])
       # Rbind 
       relevancy_log <- rbind(relevancy_log, log)
     }
@@ -153,24 +144,20 @@ check_relevancy_rules <- function(data, tool_relevancy, sheet_name){
   if (nrow(relevancy_log) == 0) {
     print(paste0("No relevancy issues found in: ", sheet_name))
   }
-  else {
-    relevancy_log['sheet']=sheet_name
-  }
-  
   # End
   return(relevancy_log)
 }
 
-## * added the series_col condition in this function specific to this project
+## Update Select_multiple series columns
 update_series_cols <- function(data, tool_path, question_separator){
   # Read & Filter tool
   tool <- read_excel(tool_path, "survey", guess_max = 100000)
   sm_cols <- tool$name[grepl("select_multiple", tool$type) & tool$name %in% names(data)]
-
+  
   for(question in sm_cols){
     # print(paste0("Updating: ", question)) # Print
     ## Get all series columns
-    series_cols <- names(data)[grepl(paste0("^",question, question_separator, "[0-9]{1,2}$"), names(data))] # Regex:started by the question and ended by 1 to 2 numbers, nothing else
+    series_cols <- names(data)[grepl(paste0("^",question, question_separator, "[0-9]{1,4}$"), names(data))] # Regex: detect the question ended by 1 to 4 numbers followed by nothing else
     ### Project specific (should be removed)
     if("ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1" %in% series_cols){
       series_cols[series_cols %in% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1"] <- "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4.1"
@@ -195,91 +182,83 @@ update_series_cols <- function(data, tool_path, question_separator){
   }
   return(data)
 }
-## * added the series_col condition in this function specific to this project
+## Check Series Cols
 check_select_multiple <- function(data, tool_path, question_separator, KEY="KEY"){
   # Read & Filter tool
   tool <- read_excel(tool_path, "survey", guess_max = 100000)
   sm_cols <- tool$name[grepl("select_multiple", tool$type) & tool$name %in% names(data)]
-
+  
   series_log <- data.frame(KEY=NA,question=NA,value=NA,series_columns=NA,
                            series_values=NA,Remarks=NA)
   
   for(question in sm_cols){
     # print(paste0("Checking: ", question)) # Print
     # Get all series columns
-    # series_cols <- names(select(data, starts_with(paste0(question, question_separator))))
-    series_cols <- names(data)[grepl(paste0("^",question, question_separator, "[0-9]{1,2}$"), names(data))] # Regex: question name ended by 1 to 2 numbers, nothing else
+    series_cols <- names(data)[grepl(paste0("^",question, question_separator, "[0-9]{1,4}$"), names(data))] # Regex: detect the question ended by 1 to 4 numbers followed by nothing else
     ### Project specific (should be removed)
     if("ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1" %in% series_cols){
       series_cols <- series_cols[series_cols %notin% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1"]
     }
     ## 
+    # Filter NA responses
     data_sub <- data %>% 
       select(all_of(question), all_of(series_cols), all_of(KEY)) %>% 
       filter(!is.na(get(question)))
     
-    for(i in 1:nrow(data_sub)){
-      if(i %in% 0){
-        break
-      }
-      #question value
-      val <- str_split(data_sub[[question]][i], " |-")[[1]]
-      #make related series column name
-      series_columns <- paste0(question,question_separator, val)
-      other_columns <- names(data_sub)[names(data_sub) %notin% c(series_columns, question, "KEY")]
-      ### Project specific (should be removed)
-      if("ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1" %in% series_columns){
-        series_columns <- series_columns[series_columns %notin% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1"]
-        other_columns <- other_columns[other_columns %notin% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4.1"]
-      }
-      ## 
-
-      if(!all(series_columns %in% names(data_sub))){
-        log <- c(data_sub$KEY[i], 
-                 question, 
-                 data_sub[[question]][i], 
-                 paste0(series_columns, collapse = " - "),
-                 "", 
-                 Remarks="Series column not in data")
-        series_log <- rbind(series_log, log)
-      } else if(any(data_sub[i,series_columns] %in% c(NA, 0))){
-        log <- c(data_sub$KEY[i], 
-                 question, 
-                 data_sub[[question]][i], 
-                 paste0(series_columns, collapse = " - "),
-                 paste0(data_sub[i,series_columns], collapse = " - "),
-                 Remarks = "Inonsistent series columns")
-        series_log <- rbind(series_log, log)
-      } else if(any(data_sub[i, other_columns] %in% 1)){
+    if(nrow(data_sub)!=0){
+      for(i in 1:nrow(data_sub)){
+        #question value
+        val <- str_split(data_sub[[question]][i], " |-")[[1]]
+        # make related series column name
+        series_columns <- paste0(question,question_separator, val)
+        other_columns <- names(data_sub)[names(data_sub) %notin% c(series_columns, question, "KEY")]
+        ### Project specific (should be removed)
+        if("ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1" %in% series_columns){
+          series_columns <- series_columns[series_columns %notin% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1"]
+          other_columns <- other_columns[other_columns %notin% "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4.1"]
+        }
+        ## 
         
-        other_cols <- other_columns[which(data_sub[i, other_columns] %in% 1)]
-        log <- c(data_sub$KEY[i], 
-                 question, 
-                 data_sub[[question]][i], 
-                 paste0(other_cols, collapse = " - "),
-                 paste0(data_sub[i,other_cols], collapse = " - "),
-                 Remarks = "At least one response is not in the tool choices")
-        series_log <- rbind(series_log, log)
+        if(!all(series_columns %in% names(data_sub))){
+          log <- c(data_sub$KEY[i], 
+                   question, 
+                   data_sub[[question]][i], 
+                   paste0(series_columns, collapse = " - "),
+                   "", 
+                   Remarks="Series column not in data")
+          series_log <- rbind(series_log, log)
+        } else if(any(data_sub[i,series_columns] %in% c(NA, 0))){
+          log <- c(data_sub$KEY[i], 
+                   question, 
+                   data_sub[[question]][i], 
+                   paste0(series_columns, collapse = " - "),
+                   paste0(data_sub[i,series_columns], collapse = " - "),
+                   Remarks = "Inonsistent series columns")
+          series_log <- rbind(series_log, log)
+        } else if(any(data_sub[i, other_columns] %in% 1)){
+          
+          other_cols <- other_columns[which(data_sub[i, other_columns] %in% 1)]
+          log <- c(data_sub$KEY[i], 
+                   question, 
+                   data_sub[[question]][i], 
+                   paste0(other_cols, collapse = " - "),
+                   paste0(data_sub[i,other_cols], collapse = " - "),
+                   Remarks = "At least one response is not in the tool choices")
+          series_log <- rbind(series_log, log)
+        }
       }
     }
   }
   if(nrow(series_log) == 1){
-    print("No mismatches found!")
-    return(series_log)
+    print(paste0("No mismatches found: ", deparse(substitute(data))))
+    return(series_log[-1,])
   } else {
     return(series_log[-1,])
   }
 }
 
-
-#Logs all the data points that are not translated
+# Logs all the data points that are not translated
 missing_translation <- function(data, KEY, excluded_cols){
-  
-  # # test
-  # data <- hf_t1_data_wide
-  # KEY = "KEY"
-  # #
-  
   question <- c(); old_value <- c(); uuid <- c()
   data_cols <- colnames(data)[colnames(data) %notin% excluded_cols]
   # special_characters <- "–|’|é|ý|\\(|\\)|\\`|\\~|\\!|\\@|\\#|\\$|\\%|\\^|\\&|\\*|\\-|\\+|\\=|\\||\\\\|\\{|\\}|\\[|\\]|\\:|\\;|\\'|\\<|\\>|\\,|\\.|\\?|\\/|\\_|\\.|\\−|\\‘|\\’"
@@ -303,34 +282,20 @@ missing_translation <- function(data, KEY, excluded_cols){
     print(paste0("No untranslated data found in: ", deparse(substitute(data))))
     log <- data.frame()
   } else{
-    log <- data.frame(question,old_value, new_value=NA, uuid, Remarks=NA) %>% unique()
+    log <- data.frame(question, old_value, new_value=NA, uuid, Remarks=NA) %>% unique()
   }
 }
 
 # Update questions with audio links
-update_links <- function(data, tool_path, download_link="https://artftpm.surveycto.com/view/submission-attachment/", key_col="KEY", rename=FALSE){
-  ## Test Values
-  # data=t2_data
-  # tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys.xlsx"
-  # download_link="https://artftpm.surveycto.com/view/submission-attachment/"
-  # key_col="KEY"
-  # rename=FALSE
-  # col_i <- "Please_Provide_Explanation"
-  ##
-  
+update_media_links <- function(data, tool_path, download_link="https://artftpm.surveycto.com/view/submission-attachment/", key_col="KEY", rename=FALSE){
   # Data types with download link
   link_types <- c("image", "audio", "audio audit", "text audit")
-  # common_file_types <- c(".csv", ".m4a", ".amr", ".wav", ".aac", ".mp3", ".jpg", ".ogg")
+  # common_file_types <- c(".csv", ".m4a", ".amr", ".wav", ".aac", ".mp3", ".jpg")
   common_file_types <- ".csv$|.m4a$|.amr$|.wav$|.aac$|.mp3$|.jpg$|.ogg$"
   # Read & Filter tool
   tool <- read_excel(tool_path, "survey", guess_max = 100000)
   link_cols <- tool %>% filter(type %in% link_types & name %in% names(data)) %>% pull(name)
   
-  # ## Test
-  # test_c <- c()
-  # audio_length <- c()
-  # ##
-  # 
   # Loop through each column and recode
   for(col_i in link_cols){
     # Filter NA values and anything that does not have a proper file extension (value might be changed in the log)
@@ -340,27 +305,15 @@ update_links <- function(data, tool_path, download_link="https://artftpm.surveyc
     ## Replace with cto link
     data[[col_i]] <- str_remove(data[[col_i]], "File skipped from exports: ") # Not using str_replace because some may only have the file name
     
-    # # # Test
-    # audio_length <- c(audio_length, (str_length(data[[col_i]][filtered_index]) %>% unique()))
-    # 
-    # # test_c <- c(test_c, (str_remove_all(data[[col_i]][filtered_index], "[0-9].") %>% unique()))
-    # test_c <- c(test_c, (str_sub(data[[col_i]][filtered_index], start = -4) %>% unique()))
-    # # #
-    
     data[[col_i]][filtered_index] <- paste0(download_link, data[[col_i]][filtered_index])
     data[[col_i]][filtered_index] <- paste0(data[[col_i]][filtered_index], new_keys) %>% str_squish()
-
+    
     ## Rename the new column if asked
     if(rename){
       ncol_i <- paste0("n", col_i) # New name
       names(data)[names(data) == col_i] <- ncol_i
     }
   }
-  ## Test
-  # print("Unique lengths:")
-  # # print(unique(audio_length))
-  # print(unique(test_c) %>% dput())
-  # ##
   return(data)
 }
 
@@ -456,16 +409,20 @@ export_datasets <- function(data, file_path, font_name="Arial", font_size=9, hea
     df_nrows = nrow(data_sub)
     
     addStyle(wb, sheet=sheet, header_style, rows = 1, cols = 1:df_ncols, gridExpand = TRUE)
-    addStyle(wb, sheet=sheet, body_style, rows = 2:df_nrows, cols = 1:df_ncols, gridExpand = TRUE)
+    if(df_nrows > 0){
+      addStyle(wb, sheet=sheet, body_style, rows = 2:df_nrows, cols = 1:df_ncols, gridExpand = TRUE)
+    }
     writeData(wb, sheet, data_sub)
   }
   saveWorkbook(wb, file_path, overwrite = TRUE)
 } 
 
-log_questions <- function(data, columns, columns_different="", suffix, sheet){
+# Checks Audio, Image and translation columns
+log_questions <- function(data, columns, columns_different="", key_col="KEY", suffix, sheet){
   # QA Image status to exclude
   image_qa_status <- c("Checked & Verified", "Checked - Irrelevant Photo", "Checked - Blur/Not Visible Photo", 
-                       "Checked - Photo Not Visible at the Health Facility")
+                       "Checked - Photo Not Visible at the Health Facility", "Checked - Irrelevant Photo Document not exist",
+                       "Checked - Irrelevant Photo FR Uploaded Wrong Photo", "Checked - Irrelevant Photo Item not exist")
   # Standard download link 
   # download_links <- "https://atrconsultingaf.surveycto.com/view/submission-attachment/"
   download_links <- "https://artftpm.surveycto.com/view/submission-attachment/"
@@ -479,6 +436,7 @@ log_questions <- function(data, columns, columns_different="", suffix, sheet){
     
     # Add Translation/QA to question name 
     if(col %in% names(columns_different)){
+      # If Translation/QA column name is different, get it from columns_different
       calculated_col <- columns_different[[col]]
     } else {
       calculated_col <- paste0(col, "_", suffix)
@@ -495,7 +453,7 @@ log_questions <- function(data, columns, columns_different="", suffix, sheet){
                                                                !grepl("?uuid=uuid%3A", data[[col]]) | 
                                                                !grepl(paste0(common_file_types, collapse = "|"), data[[col]])) & 
                                         data[[col]] %notin% "No_audio_received_from_the_field/Translation_is_from_a_callback"
-                                      ),
+      ),
       "Download link is missing"=which(data[[calculated_col]] %notin% c(NA, "", "NA") & is.na(data[[col]]))
     )
     # Question specific checks
@@ -519,7 +477,7 @@ log_questions <- function(data, columns, columns_different="", suffix, sheet){
     
     # Log
     if(nrow(flagged_data) != 0){
-      log <- data.frame(KEY=data$KEY[flagged_data$rows],
+      log <- data.frame(KEY=data[[key_col]][flagged_data$rows],
                         question=calculated_col,
                         value=data[[calculated_col]][flagged_data$rows],
                         download_link=data[[col]][flagged_data$rows],
@@ -531,84 +489,6 @@ log_questions <- function(data, columns, columns_different="", suffix, sheet){
   }
   return(question_log)
 }
-# 
-# log_questions_test <- function(data, columns, columns_different="", suffix, sheet){
-#   # Test
-#   data=t2_data_filtered
-#   columns=t2_audio_cols
-#   columns_different=t2_audio_cols_diff 
-#   suffix="Translation"
-#   sheet="data"
-#   #
-#   # QA Image status to exclude
-#   image_qa_status <- c("Checked & Verified", "Checked - Irrelevant Photo", "Checked - Blur/Not Visible Photo", 
-#                        "Checked - Photo Not Visible at the Health Facility")
-#   # Standard download link 
-#   # download_links <- "https://atrconsultingaf.surveycto.com/view/submission-attachment/"
-#   download_links <- "https://artftpm.surveycto.com/view/submission-attachment/"
-#   common_file_types <- c(".csv", ".m4a", ".amr", ".wav", ".aac", ".mp3", ".jpg", ".ogg")
-#   # Translation texts to flag
-#   audio_issues <- c("No clear voice", "Not clear voice", "No audio", "Not audible", "Unclear audio", 
-#                     "inaudible", "Unclear language", "UNKNOWN LANGUAGE", "Unclear response", "NO ANSWER")
-#   
-#   question_log <- data.frame()
-#   for(col in columns){
-#     
-#     # Add Translation/QA to question name 
-#     if(col %in% names(columns_different)){
-#       calculated_col <- columns_different[[col]]
-#     } else {
-#       calculated_col <- paste0(col, "_", suffix)
-#     }
-#     
-#     # Log if question is missing
-#     if(calculated_col %notin% names(data)){
-#       message(calculated_col, " not found in the dataset!")
-#     }
-#     
-#     ### Flag 
-#     testdt <- data[which(!is.na(data[[col]]) & 
-#                            str_length(data[[calculated_col]]) < 20 & 
-#                            data[[calculated_col]] %notin% c(image_qa_status, "-", NA, "", "NA", ".", "--", "---", "..") &
-#                            !grepl(paste0(audio_issues, collapse = "|"), data[[calculated_col]], ignore.case = TRUE)), c(col, calculated_col)] 
-#     testdt$Is_There_Anything_Else_Youd_Like_To_Add_Translation %>% unique()
-#     write.xlsx(testdt, "test.xlsx")
-#     flagged_data <- list(
-#       "Incorrect download link"=which(!is.na(data[[col]]) & (!grepl(download_links, data[[col]]) | 
-#                                                                !grepl("?uuid=uuid%3A", data[[col]]) | 
-#                                                                !grepl(paste0(common_file_types, collapse = "|"), data[[col]])
-#       )),
-#       "Download link is missing"=which(data[[calculated_col]] %notin% c(NA, "", "NA") & is.na(data[[col]]))
-#     )
-#     # Question specific checks
-#     if(suffix == "QA"){
-#       flagged_data[["Image QA status is incorrect or not added"]] <- which(!is.na(data[[col]]) & data[[calculated_col]] %notin% image_qa_status)
-#     } else {
-#       flagged_data[["Audio Translation is missing"]] <- which(!is.na(data[[col]]) & data[[calculated_col]] %in% c(image_qa_status, "-", NA, "", "NA", ".", "--", "---", ".."))
-#       flagged_data[["Unclear voice/audio"]] <- which(!is.na(data[[col]]) & grepl(paste0(audio_issues, collapse = "|"), data[[calculated_col]], ignore.case = TRUE))
-#     }
-#     
-#     # Covert to data.frame
-#     flagged_data <- plyr::ldply(flagged_data, data.frame) 
-#     names(flagged_data) = c("issue", "rows") # Rename
-#     flagged_data <- flagged_data %>% 
-#       group_by(rows) %>% 
-#       mutate(issue = paste0(issue, collapse = " & ")) %>% ungroup() # Combine issues
-#     
-#     # Log
-#     if(nrow(flagged_data) != 0){
-#       log <- data.frame(KEY=data$KEY[flagged_data$rows],
-#                         question=calculated_col,
-#                         value=data[[calculated_col]][flagged_data$rows],
-#                         download_link=data[[col]][flagged_data$rows],
-#                         question_type=suffix,
-#                         sheet=sheet,
-#                         issue=flagged_data$issue)
-#       question_log <- rbind(question_log, log)
-#     }
-#   }
-#   return(question_log)
-# }
 
 # Logs any responses not in the tool
 check_responses <- function(data, tool_path, sheet, excluded_cols=""){
@@ -656,7 +536,7 @@ check_responses <- function(data, tool_path, sheet, excluded_cols=""){
         }
         
       } else {
-        flagged_rows <- which(data[[col_i]] %notin% c(str_squish(tool_sub$response_label), NA))
+        flagged_rows <- which(data[[col_i]] %notin% c(tool_sub$response_label, NA))
       }
       
       # data[[col_i]][!is.na(data[[col_i]])] %>% str_split(";")
@@ -673,8 +553,7 @@ check_responses <- function(data, tool_path, sheet, excluded_cols=""){
     }
     if(nrow(response_log) == 0){
       print("All responses match with the Tool!")
-    }
-    return(response_log)  
+    } 
+    return(response_log) 
   }
-
 }

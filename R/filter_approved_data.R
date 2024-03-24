@@ -27,19 +27,6 @@ t2_other_filtered <- t2_other %>%
 t3_data_filtered <- t3_data %>% 
   filter(qa_status %in% approved_qa_status)
 
-## Tool 4 ------------------------------------------------------------------------------------------
-# infra_data_filtered <- infra_data %>% filter(qa_status %in% approved_qa_status)
-# infra_rep_filtered <- infra_rep %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_doc_filtered <- infra_doc %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_env_filtered <- infra_env %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_feat_filtered <- infra_feat %>%
-#   filter(PARENT_KEY %in% infra_data$KEY)
-# infra_elem_filtered <- infra_elem %>%
-#   filter(PARENT_KEY %in% infra_feat$KEY) # Parent is Features
-
 ## Remove extra objects ----------------------------------------------------------------------------
 rm(approved_qa_status)
 
