@@ -137,7 +137,7 @@ source("R/filter_approved_data.R")
 
 ## Logic check -------------------------------------------------------------------------------------
 # file.edit("R/logic_check.R")
-# source("R/logic_check.R") 
+source("R/logic_check.R")
 
 ## Compare dataset responses with the Tools --------------------------------------------------------
 # file.edit("R/dataset_responses_check.R")
@@ -149,7 +149,7 @@ source("R/dataset_responses_check.R")
 
 # generate data with missing translations ----------------------------------------------------------
 # file.edit("R/check_missing_translation.R")
-# source("R/check_missing_translation.R") # Check later on
+source("R/check_missing_translation.R") 
 
 # Export -------------------------------------------------------------------------------------------
 ## Tool 1.1
@@ -224,11 +224,11 @@ writexl::write_xlsx(correction_log, "output/correction_log.xlsx", format_headers
 writexl::write_xlsx(correction_log_issues, "output/correction_log_issues.xlsx", format_headers = F) # correction log issues
 # writexl::write_xlsx(translation_log_issues, "output/translation_log_issues.xlsx", format_headers = F) # correction log issues
 writexl::write_xlsx(correction_log_discrep, "output/correction_log_discrep.xlsx", format_headers = F)
-# writexl::write_xlsx(missing_translation_log, "output/untranslated_log.xlsx", format_headers = F)
+writexl::write_xlsx(missing_translation_log, "output/untranslated_log.xlsx", format_headers = F)
 writexl::write_xlsx(relevancy_issues, "output/relevancy_issues.xlsx", format_headers = F)
 writexl::write_xlsx(SM_issues, "output/Select_multiple_issues.xlsx", format_headers = F)
 writexl::write_xlsx(missing_translation_QA_log, "output/Missing_audio_translation_&_image_QA.xlsx", format_headers = F)
 writexl::write_xlsx(qa_backlog_list, "output/QA_backlog.xlsx", format_headers = F)
 writexl::write_xlsx(response_log_list, "output/dataset_response_mismatch_with_tool.xlsx", format_headers = F)
-# writexl::write_xlsx(logical_issues_list, "output/Logical_issues.xlsx", format_headers = F)
+writexl::write_xlsx(logical_issues_list, "output/Logical_issues.xlsx", format_headers = F)
 

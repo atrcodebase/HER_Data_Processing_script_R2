@@ -38,7 +38,7 @@ HF_Type_issue <- hf_t1_data_wide %>%
   select(Province, District, HF_Code_based_on_sample, HF_Name_based_on_Sample, HF_Type_based_on_sample, HF_Type_Based_on_SV) %>% unique() %>%
   janitor::get_dupes(HF_Code_based_on_sample) %>% 
   mutate(issue="Same HF has two differnet HF_Type_Based_on_SV")
-write.xlsx(HF_Type_issue, "output/Multiple_HF_Type_T1.xlsx")
+# write.xlsx(HF_Type_issue, "output/Multiple_HF_Type_T1.xlsx")
 
 t1.1_logical_issues <- rbind(
   hf_t1_data %>%
@@ -359,17 +359,15 @@ sufficient_med_cols <- c(
   "Injury_Related_Care_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication",
   "Pregnancy_Related_Care_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication",
   "ANC_PNC_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication_B4",
-  "ANC_PNC_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication_B4_1",
-  "Preventative_Care_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication")
+  "ANC_PNC_Did_You_Your_Household_Member_Find_The_Facility_To_Have_Sufficient_Medication_B4_1")
 not_satisfied <- c(
   "Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility",
   "Injury_Related_Care_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility",
   "Pregnancy_Related_Care_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility",
   "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4",
-  "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1",
-  "Preventative_Care_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility")
+  "ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1")
 
-for(col_i in 1:6){
+for(col_i in 1:5){
   main_question <- sufficient_med_cols[col_i]
   relev_question <- not_satisfied[col_i]
   
@@ -518,8 +516,8 @@ rejec_approved <- rbind(
 )
 
 ## Check against Tools 1.1 and 1.2 -----------------------------------------------------------------
-hf_t1_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t2_data_wide$HF_Code_based_on_sample)
-hf_t2_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+# hf_t1_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t2_data_wide$HF_Code_based_on_sample)
+# hf_t2_data_wide %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
 
 # Tool 2 checks
 t1_missing_HFs <- rbind(
@@ -540,11 +538,11 @@ t1_missing_HFs <- rbind(
 t1_missing_HFs <- t1_missing_HFs %>%
   group_by(HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>%
   mutate(not_found_in = paste0(not_found_in, collapse = " & ")) %>% unique()
-write.xlsx(t1_missing_HFs, "output/Tool1.1_HF_missing_in_other_tools.xlsx")
+# write.xlsx(t1_missing_HFs, "output/Tool1.1_HF_missing_in_other_tools.xlsx")
 
-hf_t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
-t2_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
-t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+# hf_t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+# t2_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
+# t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
 
 # Check sample data
 hf_t1_data_wide %>%
@@ -586,6 +584,8 @@ count_mismatch <- plyr::rbind.fill(
 logical_issues_list <- list(
   logical_issues=logical_issues,
   logical_issues2=logical_issues2,
+  T1.1_Hf_type_issue=HF_Type_issue,
+  T1_missing_HFs=t1_missing_HFs,
   duplicate_survey_numbers=duplicate_survey_numbers,
   missing_male_female_data=missing_male_female_data,
   repeat_sheet_issues=count_mismatch,
