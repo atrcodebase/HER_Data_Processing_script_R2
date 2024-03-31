@@ -85,7 +85,8 @@ t3_missing_log <- log_questions(data=t3_data_filtered, columns=t3_audio_cols, co
 ## Log Missing Translation -------------------------------------------------------------------------
 excluded_cols <- c("Province_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
                    "Resp_Name", "Surveyor_Name", "District_DariPashto", "Village", 
-                   "review_comments")
+                   "review_comments", "Selected_HH_Member_Label", "PC_Selected_HH_Member_Label",
+                   "B6_Label")
 
 missing_translation_log <- rbind(
   missing_translation(data = hf_t1_data_wide, KEY = "KEY", excluded_cols) %>% mutate(Tool = "Tool 1.1", tab_name="data"),
