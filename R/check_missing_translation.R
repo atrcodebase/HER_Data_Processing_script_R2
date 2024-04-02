@@ -135,6 +135,21 @@ missing_translation_QA_log <- missing_translation_QA_log %>%
 #     by=c("KEY", "question")
 #   )
 
+## Separate translation and image logs
+missing_translation_QA_log_sub <- missing_translation_QA_log %>% 
+  filter(question_type == "Translation" &
+           !(Tool %in% c("1.1", "2") & question %in% c("Explanation_Note_Translation", "No_Consent_Reason_Translation"))) %>% # QA: translation not required
+  mutate(key=str_split_fixed(KEY, "/", 2)[,1]) %>%
+  left_join(qa_log %>% select(key=KEY, Survey_Language), by="key") %>% 
+  select(KEY, Tool, Survey_Language, Question=question, Audio_link=download_link, value, sheet, issue) 
+
+# Export list
+missing_translation_QA_log <- list(
+  Image_log=filter(missing_translation_QA_log, question_type=="QA"),
+  Audio_log=missing_translation_QA_log_sub
+)
+
 # remove extra objects -----------------------------------------------------------------------------
 rm(t1.1_audio_cols, t1.1_image_cols, t1.2_image_cols, t1.2_image_cols_diff, t1.1_tool,
-  excluded_cols, t1.3_audio_cols, t2_tool, t2_audio_cols, t2_audio_cols_diff, t3_tool, t3_audio_cols, t3_audio_cols_diff)
+  excluded_cols, t1.3_audio_cols, t2_tool, t2_audio_cols, t2_audio_cols_diff, t3_tool, t3_audio_cols, 
+  t3_audio_cols_diff, missing_translation_QA_log_sub)
