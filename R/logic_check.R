@@ -522,6 +522,10 @@ rejec_approved <- rbind(
 # Tool 2 checks
 t1_missing_HFs <- rbind(
   hf_t1_data_wide %>%
+    filter(HF_Code_based_on_sample %notin% hf_t2_data_wide$HF_Code_based_on_sample) %>%
+    select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
+    mutate(not_found_in = "Tool 1.2"),
+  hf_t1_data_wide %>%
     filter(HF_Code_based_on_sample %notin% hf_t3_data_filtered$HF_Code_based_on_sample) %>%
     select(Province, District, HF_Type_based_on_sample, HF_Type_Based_on_SV, HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>% unique() %>%
     mutate(not_found_in = "Tool 1.3"),
