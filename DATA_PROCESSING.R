@@ -17,6 +17,9 @@ source("R/custom_functions.R")
 source("R/read_data.R") # read data
 
 # Rename problematic column
+hf_t1_data <- hf_t1_data %>% 
+  select(-Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6...357) %>% 
+  rename(Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6=Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6...358)
 t2_data <- t2_data %>% 
   rename(ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4.1=
            ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1...252, # 0s/1s column
@@ -26,10 +29,11 @@ t2_data <- t2_data %>%
 
 # read qa-log, correction log, and translation log -------------------------------------------
 url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSa9Kqouso7Oq0CfebhpP7fgO3WxRoOdjyOcniLVoCMDTmwv9rK3GICDzsAvrH4iitc_tdJxS-yF4F4/pub?" 
+url2 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_lU37EeYithWp_cTKsjAcFCXm8w8MTB7gPolFASyF8-MhvRNh-0BHu6VUiUL-YSJiM9gsPeVrXHgg/pub?" 
 qa_log <- readr::read_csv(paste0(url, "gid=473078450&single=true&output=csv"), col_types = "c")
 correction_log <- readr::read_csv(paste0(url, "gid=758688462&single=true&output=csv"), col_types = "c")
 rejection_log <- readr::read_csv(paste0(url, "gid=1224153730&single=true&output=csv"), col_types = "c")
-# translation_log <- readr::read_csv(paste0(url, "gid=187815952&single=true&output=csv"), col_types = "c")
+translation_log <- readr::read_csv(paste0(url2, "gid=0&single=true&output=csv"), col_types = "c")
 
 # Join QA Status -----------------------------------------------------------------------------------
 count(qa_log, Tool, `Final QA Status`)
@@ -77,18 +81,18 @@ source("R/check_relevancy_rules.R")
 # file.edit("R/attach_labels.R")
 source("R/attach_labels.R")
 
-# # apply Translation log ----------------------------------------------------------------------------
-# translation_log %>% count(Tool)
-# # file.edit("R/apply_translation_log.R")
-# source("R/apply_translation_log.R")
-# if(nrow(translation_log_discrep) !=0){
-#   print("Correction Logs not applied -------------------")
-#   correction_log_discrep
-# }
+# apply Translation log ----------------------------------------------------------------------------
+translation_log %>% count(Tool, `Tab Name`)
+# file.edit("R/apply_translation_log.R")
+source("R/apply_translation_log.R")
+if(nrow(translation_log_discrep) !=0){
+  print("Correction Logs not applied -------------------")
+  correction_log_discrep
+}
 
 ## Recode ------------------------------------------------------------------------------------------
 # file.edit("R/recode.R")
-source("R/recode.R") # Check Village_Enlglish in Tool 2, 3
+source("R/recode.R") 
 
 # produce qa-backlog -------------------------------------------------------------------------------
 qa_log_sub <- qa_log %>% select(Tool, qa_status=`Final QA Status`, KEY)

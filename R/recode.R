@@ -148,7 +148,10 @@ t3_data <- t3_data %>%
          Village = case_when(
            !is.na(Village_English) ~ Village_English,
            TRUE ~ Village
-         ))
+         ), 
+         Which_Health_Facility_Are_You_An_Lhc_Health_Shura_Member_In = str_replace(Which_Health_Facility_Are_You_An_Lhc_Health_Shura_Member_In, "HFNamebasedonSample", "HF_Name_based_on_Sample"),
+         Which_Health_Facility_Are_You_Related_To_As_A_Chw= str_replace(Which_Health_Facility_Are_You_Related_To_As_A_Chw, "HFNamebasedonSample", "HF_Name_based_on_Sample"))
+
 t3_data <- update_media_links(data=t3_data, tool_path = t3_tool)
 
 # remove extra objects -----------------------------------------------------------------------------

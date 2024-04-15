@@ -122,8 +122,6 @@ missing_translation_QA_log <- rbind(
 ) %>% 
   arrange(Tool, KEY)
 
-missing_translation_QA_log <- missing_translation_QA_log %>% 
-  left_join(hf_t1_data_wide %>% select(Interview_Type_Tool, KEY),by="KEY")
 # missing_translation_QA_log <- missing_translation_QA_log %>% 
 #   mutate(Question = str_remove(question, "_Translation")) %>%
 #   # Filter issues added in Translation log but marked as other languages
@@ -142,6 +140,13 @@ missing_translation_QA_log_sub <- missing_translation_QA_log %>%
   mutate(key=str_split_fixed(KEY, "/", 2)[,1]) %>%
   left_join(qa_log %>% select(key=KEY, Survey_Language), by="key") %>% 
   select(KEY, Tool, Survey_Language, Question=question, Audio_link=download_link, value, sheet, issue) 
+# Remove audios already added in translation log
+missing_translation_QA_log_sub <- missing_translation_QA_log_sub %>% 
+  left_join(hf_t1_data_wide %>% select(Interview_Type_Tool, KEY),by="KEY") %>% 
+  anti_join(
+    translation_log %>% select(KEY, Question),
+    by=c("KEY", "Question")
+  )
 
 # Export list
 missing_translation_QA_log <- list(
