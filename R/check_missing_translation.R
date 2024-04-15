@@ -79,8 +79,14 @@ t3_audio_cols_diff <- list(
   "Community_Elders_Confirmation_On_Why_Lhc_Or_Chw__Does_Not_Exist_In_The_Community"="Community_Elders_Confirmation_On_Why_Lhc_Or_Chw_Does_Not_Exist_In_The_Community_Translation")
 # Log
 t3_missing_log <- log_questions(data=t3_data_filtered, columns=t3_audio_cols, columns_different = t3_audio_cols_diff, suffix="Translation", sheet="data")
-
-
+# No need to translate the confirmation audio if at least one of those questions does not have No
+t3_missing_log <- t3_missing_log %>% 
+  left_join(
+    t3_data_filtered %>% select(Does_The_Community_Have_Local_Health_Committee_Lhc_Members, Does_The_Community_Have_Community_Health_Workers_Chws, KEY),
+    by="KEY") %>% 
+  filter(!(question %in% "Community_Elders_Confirmation_On_Why_Lhc_Or_Chw_Does_Not_Exist_In_The_Community_Translation" &
+         (Does_The_Community_Have_Local_Health_Committee_Lhc_Members %notin% "No" & Does_The_Community_Have_Community_Health_Workers_Chws %notin% "No"))) %>% 
+  select(-Does_The_Community_Have_Local_Health_Committee_Lhc_Members, -Does_The_Community_Have_Community_Health_Workers_Chws)
 
 ## Log Missing Translation -------------------------------------------------------------------------
 excluded_cols <- c("Province_DariPashto", "HF_Name_based_on_Sample_DariPashto", 
