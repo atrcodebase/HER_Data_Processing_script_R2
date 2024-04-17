@@ -116,7 +116,7 @@ QA_backlog_keys <- rbind(
   mutate(qa_status = case_when(
     is.na(qa_status) ~ "NA_in_qa_log",
     TRUE ~ qa_status)) %>% 
-  filter(qa_status %notin% c("Approved", "Rejected")) # Filter Keys not yet QAed
+  filter(qa_status %notin% c("Approved", "Excel Check Approved", "Rejected")) # Filter Keys not yet QAed
 # Count
 QA_backlog <- QA_backlog_keys %>% 
   group_by(SubmissionDate, Tool) %>% count(qa_status, name = "freq") %>% 
@@ -131,7 +131,7 @@ print(knitr::kable(QA_backlog, format = "simple"))
 source("R/convert_to_wide_format.R")
 
 ## Filter Approved data ----------------------------------------------------------------------------
-approved_qa_status <- "Approved"
+approved_qa_status <- c("Approved", "Excel Check Approved")
 # file.edit("R/filter_approved_data.R")
 source("R/filter_approved_data.R")
 
@@ -153,7 +153,7 @@ source("R/dataset_responses_check.R")
 
 # generate data with missing translations ----------------------------------------------------------
 # file.edit("R/check_missing_translation.R")
-source("R/check_missing_translation.R") 
+source("R/check_missing_translation.R")
 
 # Export -------------------------------------------------------------------------------------------
 ## Tool 1.1
