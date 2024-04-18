@@ -3,7 +3,7 @@ rejected_qa_status <- "Rejected"
 scto_rejected <- "REJECTED"
 
 ## Tool 1.1 ----------------------------------------------------------------------------------------
-hf_t1_data <- hf_t1_data %>% count(review_status)
+hf_t1_data <- hf_t1_data %>% 
   filter(qa_status %notin% rejected_qa_status &
            KEY %notin% rejection_log$KEY_Unique & 
            review_status %notin% scto_rejected)
