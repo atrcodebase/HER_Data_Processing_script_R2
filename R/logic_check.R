@@ -209,8 +209,7 @@ t2_logical_issues <- rbind(
     select(Questions, Values, issue, KEY, qa_status),
   # Number of HH members fell ill are more than household members
   t2_data_filtered %>% 
-    filter(How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months > 
-             How_Many_Members_Are_In_Your_Household_Including_Yourself) %>% 
+    filter(as.numeric(How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months) > as.numeric(How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     mutate(issue = "Number of HH members fell ill are more than household members",
            Questions = "How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months - How_Many_Members_Are_In_Your_Household_Including_Yourself",
            Values = paste0(How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months, " - ",How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
