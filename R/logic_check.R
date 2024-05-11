@@ -79,19 +79,20 @@ t1.2_count_mismatch <- hf_t2_photos %>%
   rowwise() %>% 
   filter(repeat_sheet_count %notin% main_sheet_count & !(main_sheet_count %in% 0 & is.na(repeat_sheet_count))) %>% mutate(Tool = "Tool 1.2")
 
-t1.2_logical_issues <- rbind(
-  hf_t2_data %>%
-    filter(How_Many_Handwashing_Stations_Have_Functional_Water > Photos_Of_Handwashing_Stations_count) %>%
-    mutate(issue="The number of Hand Washing stations does not match with number of photos",
-           Questions = "How_Many_Handwashing_Stations_Have_Functional_Water - Photos_Of_Handwashing_Stations_count",
-           Values = paste0(How_Many_Handwashing_Stations_Have_Functional_Water, " - ", Photos_Of_Handwashing_Stations_count)) %>% 
-    select(Questions, Values, issue, KEY, qa_status)
-) %>% mutate(Tool="Tool 1.1")
+# Not needed in R3, the photos weren't taken of all stations
+# t1.2_logical_issues <- rbind(
+  # hf_t2_data %>%
+  #   filter(How_Many_Handwashing_Stations_Have_Functional_Water > Photos_Of_Handwashing_Stations_count) %>%
+  #   mutate(issue="The number of Hand Washing stations does not match with number of photos",
+  #          Questions = "How_Many_Handwashing_Stations_Have_Functional_Water - Photos_Of_Handwashing_Stations_count",
+  #          Values = paste0(How_Many_Handwashing_Stations_Have_Functional_Water, " - ", Photos_Of_Handwashing_Stations_count)) %>% 
+  #   select(Questions, Values, issue, KEY, qa_status)
+# ) %>% mutate(Tool="Tool 1.2")
 
 ## Tool 1.3  ---------------------------------------------------------------------------------------
 t1.3_logical_issues <- rbind(
   hf_t3_data_filtered %>%
-    filter(For_How_Long_Have_You_Been_Working_At_This_Hf_Years > For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years) %>%
+    filter(as.numeric(For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years) > as.numeric(For_How_Long_Have_You_Been_Working_At_This_Hf_Years)) %>%
     mutate(issue="The NC worked more years in the HF than the number of years she says she was a NC, plz double-check",
            Questions = "For_How_Long_Have_You_Been_Working_At_This_Hf_Years - For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years",
            Values = paste0(For_How_Long_Have_You_Been_Working_At_This_Hf_Years, " - ", For_How_Long_Have_You_Been_A_Nutrition_Counsellor_Years)) %>% 
@@ -216,22 +217,22 @@ t2_logical_issues <- rbind(
     select(Questions, Values, issue, KEY, qa_status),
   # Number of HH members injured are more than household members
   t2_data_filtered %>% 
-    filter(How_Many_Household_Members_Have_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months_More_Than_One > 
-             How_Many_Members_Are_In_Your_Household_Including_Yourself) %>% 
+    filter(as.numeric(How_Many_Household_Members_Have_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months_More_Than_One) > 
+             as.numeric(How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     mutate(issue = "Number of HH members injured are more than household members",
            Questions = "How_Many_Household_Members_Have_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months_More_Than_One - How_Many_Members_Are_In_Your_Household_Including_Yourself",
            Values = paste0(How_Many_Household_Members_Have_Gotten_Injured_Or_Physically_Hurt_In_The_Past_6_Months_More_Than_One, " - ",How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     select(Questions, Values, issue, KEY, qa_status),
   # Number of HH members currenlty living in household are more than household members
   t2_data_filtered %>% 
-    filter(How_Many_Members_Are_Currently_Living_In_Your_Household > How_Many_Members_Are_In_Your_Household_Including_Yourself) %>% 
+    filter(as.numeric(How_Many_Members_Are_Currently_Living_In_Your_Household) > as.numeric(How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     mutate(issue = "Number of HH members currenlty living in household are more than household members",
            Questions = "How_Many_Members_Are_Currently_Living_In_Your_Household - How_Many_Members_Are_In_Your_Household_Including_Yourself",
            Values = paste0(How_Many_Members_Are_Currently_Living_In_Your_Household, " - ",How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     select(Questions, Values, issue, KEY, qa_status),
   # Number of Incoming earning members are more than household members
   t2_data_filtered %>% 
-    filter(How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities > How_Many_Members_Are_In_Your_Household_Including_Yourself) %>% 
+    filter(as.numeric(How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities) > as.numeric(How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
     mutate(issue = "Number of Incoming earning members are more than household members",
            Questions = "How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities - How_Many_Members_Are_In_Your_Household_Including_Yourself",
            Values = paste0(How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities, " - ",How_Many_Members_Are_In_Your_Household_Including_Yourself)) %>% 
@@ -541,6 +542,17 @@ t1_missing_HFs <- rbind(
 t1_missing_HFs <- t1_missing_HFs %>%
   group_by(HF_Code_based_on_sample, HF_Name_based_on_Sample, SP_Name_based_on_sample) %>%
   mutate(not_found_in = paste0(not_found_in, collapse = " & ")) %>% unique()
+
+# Filter HFs where not all 3 interview types are conducted
+t1_missing_interviews=hf_t1_data_wide %>% 
+  count(HF_Code_based_on_sample, HF_Name_based_on_Sample, Interview_Type_Tool) %>% 
+  group_by(HF_Code_based_on_sample, HF_Name_based_on_Sample) %>% 
+  mutate(Interview_Types_Done = paste0(Interview_Type_Tool, collapse = " - "),
+         Total = n()) %>% 
+  select(-Interview_Type_Tool, -n) %>% ungroup() %>% unique() %>% 
+  filter(Total !=3)
+
+
 # write.xlsx(t1_missing_HFs, "output/Tool1.1_HF_missing_in_other_tools.xlsx")
 
 # hf_t3_data_filtered %>% filter(HF_Code_based_on_sample %notin% hf_t1_data_wide$HF_Code_based_on_sample)
@@ -574,7 +586,7 @@ if(any(duplicated(hf_t1_data_wide$KEY)) | any(duplicated(hf_t2_data_wide$KEY)) |
 # Export list --------------------------------------------------------------------------------------
 logical_issues <- plyr::rbind.fill(
   t1.1_logical_issues,
-  t1.2_logical_issues,
+  # t1.2_logical_issues,
   t1.3_logical_issues,
   t2_logical_issues
 )
@@ -589,6 +601,7 @@ logical_issues_list <- list(
   logical_issues2=logical_issues2,
   T1.1_Hf_type_issue=HF_Type_issue,
   T1_missing_HFs=t1_missing_HFs,
+  T1_missing_interviews=t1_missing_interviews,
   duplicate_survey_numbers=duplicate_survey_numbers,
   missing_male_female_data=missing_male_female_data,
   repeat_sheet_issues=count_mismatch,

@@ -18,7 +18,8 @@ source("R/read_data.R") # read data
 
 # Rename problematic column
 hf_t1_data <- hf_t1_data %>% 
-  select(-Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6...357) %>% 
+  select(-Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6...357,
+         -Do_You_Face_Issues_That_Would_Prevent_You_From_Working_Effectively_At_This_Health_Facility_Other) %>% # Removed in tool but was still in dataset
   rename(Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6=Who_Provides_Referrals_For_The_Receipt_Of_Nutrition_Services_In_This_Health_Facility_6...358)
 t2_data <- t2_data %>% 
   rename(ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4.1=
@@ -26,6 +27,7 @@ t2_data <- t2_data %>%
          ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1=
            ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1...313 # Main question
   )
+
 
 # read qa-log, correction log, and translation log -------------------------------------------
 url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSa9Kqouso7Oq0CfebhpP7fgO3WxRoOdjyOcniLVoCMDTmwv9rK3GICDzsAvrH4iitc_tdJxS-yF4F4/pub?" 
@@ -149,7 +151,7 @@ source("R/dataset_responses_check.R")
 
 ## Remove Extra columns ----------------------------------------------------------------------------
 # file.edit("R/remove_extra_columns.R")
-# source("R/remove_extra_columns.R") # Check extra cols with Shabar
+source("R/remove_extra_columns.R") # Check extra cols with Shabar
 
 # generate data with missing translations ----------------------------------------------------------
 # file.edit("R/check_missing_translation.R")
@@ -163,10 +165,20 @@ hf_t1_list <- list(
   Fatalities_Details=hf_fatalities,
   Incidents=hf_incidents
 )
+hf_t1_list_filtered <- list(
+  data=hf_t1_data_filtered,
+  Injuries_Details=hf_injuries_filtered,
+  Fatalities_Details=hf_fatalities_filtered,
+  Incidents=hf_incidents_filtered
+)
 ## Tool 1.2
 hf_t2_list <- list(
   data=hf_t2_data,
   Photos_Of_Handwashing_Stations=hf_t2_photos
+)
+hf_t2_list_filtered <- list(
+  data=hf_t2_data_filtered,
+  Photos_Of_Handwashing_Stations=hf_t2_photos_filtered
 )
 ## Tool 1.3
 hf_t3_list <- list(
@@ -217,11 +229,12 @@ writexl::write_xlsx(t3_list, "output/cleaned_data/HER_ESS_Tool_3_Community_Level
 
 ## export client datasets
 check_path("output/client_data")
-export_datasets(list(data=hf_t1_data_wide), "output/client_data/HER_ESS_Tool_1.1_Health_Facility_Level_cleaned_approved.xlsx")
-export_datasets(list(data=hf_t2_data_wide), "output/client_data/HER_ESS_Tool_1.2_Health_Facility_Level_cleaned_approved.xlsx")
-export_datasets(hf_t3_list_filtered, "output/client_data/HER_ESS_Tool_1.3_NC_Interview_cleaned_approved.xlsx", header_color = "#91CBD9", text_dec="")
-export_datasets(t2_list_filtered, "output/client_data/HER_ESS_Tool_2_Household_Level_Surveys_cleaned_approved.xlsx", header_color = "#91CBD9")
-export_datasets(t3_list_filtered, "output/client_data/HER_ESS_Tool_3_Community_Level_Surveys_cleaned_approved.xlsx", header_color = "#91CBD9")
+header_color <- "#91CBD9"
+export_datasets(hf_t1_list_filtered, "output/client_data/HER_ESS_Tool_1.1_Health_Facility_Level_cleaned_approved.xlsx", header_color = header_color)
+export_datasets(hf_t2_list_filtered, "output/client_data/HER_ESS_Tool_1.2_Health_Facility_Level_cleaned_approved.xlsx", header_color = header_color)
+export_datasets(hf_t3_list_filtered, "output/client_data/HER_ESS_Tool_1.3_NC_Interview_cleaned_approved.xlsx", header_color = header_color)
+export_datasets(t2_list_filtered, "output/client_data/HER_ESS_Tool_2_Household_Level_Surveys_cleaned_approved.xlsx", header_color = header_color)
+export_datasets(t3_list_filtered, "output/client_data/HER_ESS_Tool_3_Community_Level_Surveys_cleaned_approved.xlsx", header_color = header_color)
 
 ## export additional files
 writexl::write_xlsx(correction_log, "output/correction_log.xlsx", format_headers = F) # correction

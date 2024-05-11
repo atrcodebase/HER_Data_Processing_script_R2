@@ -32,11 +32,29 @@ t2_numeric_cols <- c("Survey_Number", "Respondent_Age", "How_Many_Members_Are_In
 t1.1_tool <- "input/tools/HER+ESS+Tool+1.1_+Health+Facility+Level+-+R3.xlsx"
 hf_t1_data <- hf_t1_data %>%
   mutate(Starttime = as.POSIXct(Starttime, format="%a %b %d %Y %H:%M:%S"),
-  Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"))
+  Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"),
+  KEY_Unique=KEY)
 hf_t1_data <- update_media_links(data=hf_t1_data, tool_path = t1.1_tool)
 hf_injuries <- update_media_links(data=hf_injuries, tool_path = t1.1_tool, key_col = "PARENT_KEY")
 hf_fatalities <- update_media_links(data=hf_fatalities, tool_path = t1.1_tool, key_col = "PARENT_KEY")
 hf_incidents <- update_media_links(data=hf_incidents, tool_path = t1.1_tool, key_col = "PARENT_KEY")
+
+# Join main Sheet cols
+hf_t1_sub <- hf_t1_data %>% 
+  select(Site_Visit_ID, Province, District, HF_Name_based_on_Sample, KEY)
+
+hf_injuries <- hf_injuries %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
+  left_join(hf_t1_sub, by="KEY") %>% 
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
+hf_fatalities <- hf_fatalities %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
+  left_join(hf_t1_sub, by="KEY") %>% 
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
+hf_incidents <- hf_incidents %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
+  left_join(hf_t1_sub, by="KEY") %>% 
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 
 ## Tool 1.2 ----------------------------------------------------------------------------------------
 t1.2_tool <- "input/tools/HER+ESS+Tool+1.2_+Health+Facility+Level+-+R3.xlsx"
@@ -45,6 +63,14 @@ hf_t2_data <- hf_t2_data %>%
          Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"))
 hf_t2_data <- update_media_links(data=hf_t2_data, tool_path = t1.2_tool)
 hf_t2_photos <- update_media_links(data=hf_t2_photos, tool_path = t1.2_tool, key_col = "PARENT_KEY")
+
+# Join main Sheet cols
+hf_t2_photos <- hf_t2_photos %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
+  left_join(hf_t2_data %>% 
+              select(Site_Visit_ID, Province, District, HF_Name_based_on_Sample, KEY), 
+            by="KEY") %>% 
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 
 ## Tool 1.3 ----------------------------------------------------------------------------------------
 t1.3_tool <- "input/tools/HER+ESS+Tool+1.3_+Nutrition+Counsellor+Interview+Tool+-+R3.xlsx"
@@ -71,7 +97,17 @@ t2_data <- t2_data %>%
 t2_other <- t2_other %>% 
   mutate(Please_Tell_Me_What_Type_Of_Health_Facility_Medical_Professional_You_Your_Household_Member_Sought_For_Service_Name = 
            str_replace(Please_Tell_Me_What_Type_Of_Health_Facility_Medical_Professional_You_Your_Household_Member_Sought_For_Service_Name, 
-                       "HFNamebasedonSample", "HF_Name_based_on_Sample")) # See if intergers have codes
+                       "HFNamebasedonSample", "HF_Name_based_on_Sample"),
+         B6_Value = case_when(
+           B6_Value %in% "1" ~ "Nutrition services (screening, counselling, treatment)",
+           B6_Value %in% "2" ~ "Health education including WASH awareness session",
+           B6_Value %in% "3" ~ "Counselling on mental health/psychological support",
+           B6_Value %in% "4" ~ "Family planning/contraceptives",
+           B6_Value %in% "77" ~ "Other",
+           B6_Value %in% "0" ~ "None",
+           TRUE ~ as.character(B6_Value)
+         )) 
+
 # Fix Download links
 t2_data <- update_media_links(data=t2_data, tool_path = t2_tool)
 t2_income <- update_media_links(data=t2_income, tool_path = t2_tool)
@@ -112,24 +148,28 @@ t2_data <- t2_data %>%
 
 # Subset & Join main sheet columns
 t2_data_sub <- t2_data %>% 
-  select(Site_Visit_ID,	Province,	District,	Village,	
-         Interviewee_Respondent_Type,	`Survey Number`=Survey_Number, KEY)
+  select(Site_Visit_ID,	Province,	District,	Village, HF_Name_based_on_Sample, KEY)
 
 t2_income <- t2_income %>%
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
-  relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 t2_illness <- t2_illness %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
-  relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 t2_injuries <- t2_injuries %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
-  relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 t2_immunization <- t2_immunization %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
-  relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 t2_other <- t2_other %>% 
+  mutate(KEY_Unique=KEY, KEY=PARENT_KEY) %>% 
   left_join(t2_data_sub, by=c("PARENT_KEY"="KEY")) %>% 
-  relocate(Site_Visit_ID:`Survey Number`, .before = 1)
+  relocate(Site_Visit_ID:HF_Name_based_on_Sample, .before = 1)
 t2_other <- t2_other %>% 
   left_join(t2_data %>% 
               select(B6_Value_Other=Did_You_Your_Household_Member_Receive_The_Following_Health_Services_In_The_Past_6_Months_Other, KEY), 
@@ -150,12 +190,13 @@ t3_data <- t3_data %>%
            TRUE ~ Village
          ), 
          Which_Health_Facility_Are_You_An_Lhc_Health_Shura_Member_In = str_replace(Which_Health_Facility_Are_You_An_Lhc_Health_Shura_Member_In, "HFNamebasedonSample", "HF_Name_based_on_Sample"),
-         Which_Health_Facility_Are_You_Related_To_As_A_Chw= str_replace(Which_Health_Facility_Are_You_Related_To_As_A_Chw, "HFNamebasedonSample", "HF_Name_based_on_Sample"))
+         Which_Health_Facility_Are_You_Related_To_As_A_Chw= str_replace(Which_Health_Facility_Are_You_Related_To_As_A_Chw, "HFNamebasedonSample", "HF_Name_based_on_Sample"),
+         KEY_Unique=KEY)
 
 t3_data <- update_media_links(data=t3_data, tool_path = t3_tool)
 
 # remove extra objects -----------------------------------------------------------------------------
-rm(t1.1_tool, t1.2_tool, remove_98_99,t1.3_tool, t2_tool, t3_tool, t2_data_sub
+rm(t1.1_tool, t1.2_tool, remove_98_99,t1.3_tool, t2_tool, t3_tool, t2_data_sub, hf_t1_sub
    # t4_checklist_tool,infra_doc_link_cols,infra_env_link_cols, infra_feat_link_cols, t4_tool,
    # infra_elem_link_cols, infra_link_cols, checklist_link_cols,
    )

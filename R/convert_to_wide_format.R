@@ -2,20 +2,20 @@
 ## DOuble check these, instead of index_inju, ..., use the count per grpup of parent keys
 # Reshape 
 hf_injuries_wide <- hf_injuries %>% 
-  select(-c(`SET-OF-Injuries_Details`, KEY)) %>% 
+  select(-c(`SET-OF-Injuries_Details`, KEY, KEY_Unique, Site_Visit_ID:HF_Name_based_on_Sample)) %>% 
   pivot_wider(names_from = "index_injury",
               values_from = c("When_Did_This_Injury_Occur", "What_Caused_The_Injury", 
                               "What_Caused_The_Injury_Translation"),
               names_vary = "slowest")
   
 hf_fatalities_wide <- hf_fatalities %>% 
-  select(-c(`SET-OF-Fatalities_Details`, KEY)) %>% 
+  select(-c(`SET-OF-Fatalities_Details`, KEY, KEY_Unique, Site_Visit_ID:HF_Name_based_on_Sample)) %>% 
   pivot_wider(names_from = "index_fatality",
               values_from = c("When_Did_This_Fatality_Occur",	"What_Caused_The_Fatality",
                               "What_Caused_The_Fatality_Translation"),
               names_vary = "slowest") 
 hf_incidents_wide <- hf_incidents %>% 
-  select(-c(`SET-OF-Incidents`, KEY)) %>% 
+  select(-c(`SET-OF-Incidents`, KEY, KEY_Unique, Site_Visit_ID:HF_Name_based_on_Sample)) %>% 
   pivot_wider(names_from = "index_incidents",
               values_from = c("Kind_of_Incident",	"Can_You_Please_Elaborate_On_The_Safety_Security_Incident_S",
                               "Can_You_Please_Elaborate_On_The_Safety_Security_Incident_S_Translation"),
@@ -40,7 +40,7 @@ hf_t2_photos_wide <- hf_t2_photos %>%
   group_by(PARENT_KEY) %>% 
   mutate(index_photos = row_number()) %>% ungroup() %>% 
   select(-c(Please_Take_Photo_Of_The_Handwashing_Area_Caption, 
-            `SET-OF-Photos_Of_Handwashing_Stations`, KEY)) %>% 
+            `SET-OF-Photos_Of_Handwashing_Stations`, KEY, KEY_Unique, Site_Visit_ID:HF_Name_based_on_Sample)) %>% 
   pivot_wider(names_from = "index_photos",
               values_from = c("Please_Take_Photo_Of_The_Handwashing_Area",
                               "Please_Take_Photo_Of_The_Handwashing_Area_QA"),
