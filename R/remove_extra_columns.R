@@ -55,7 +55,7 @@ t3_data_filtered <- t3_data_filtered %>%
   select(-all_of(extra_cols$questions[extra_cols$Tool %in% "3" & extra_cols$Sheet %in% "data"])) 
 
 # remove extra objects -----------------------------------------------------------------------------
-rm(
+rm(extra_cols)
   # t1.1_extra_cols, t1.2_extra_cols, t1.1_caption_cols, t1.2_caption_cols, t4_extra_cols, 
-  t1.3_extra_cols, t2_extra_cols, t3_extra_cols)
+  #t1.3_extra_cols, t2_extra_cols, t3_extra_cols)
 

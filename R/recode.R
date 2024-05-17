@@ -59,8 +59,10 @@ hf_incidents <- hf_incidents %>%
 ## Tool 1.2 ----------------------------------------------------------------------------------------
 t1.2_tool <- "input/tools/HER+ESS+Tool+1.2_+Health+Facility+Level+-+R3.xlsx"
 hf_t2_data <- hf_t2_data %>%
-  mutate(Starttime = as.POSIXct(Starttime, format="%a %b %d %Y %H:%M:%S"),
+  mutate(SubmissionDate= openxlsx::convertToDateTime(SubmissionDate),
+         Starttime = as.POSIXct(Starttime, format="%a %b %d %Y %H:%M:%S"),
          Endtime = as.POSIXct(Endtime, format="%a %b %d %Y %H:%M:%S"))
+
 hf_t2_data <- update_media_links(data=hf_t2_data, tool_path = t1.2_tool)
 hf_t2_photos <- update_media_links(data=hf_t2_photos, tool_path = t1.2_tool, key_col = "PARENT_KEY")
 

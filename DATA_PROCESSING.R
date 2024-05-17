@@ -28,7 +28,6 @@ t2_data <- t2_data %>%
            ANC_PNC_Why_Werent_You_Your_Household_Member_Satisfied_With_Your_Experience_Service_In_The_Health_Facility_B4_1...313 # Main question
   )
 
-
 # read qa-log, correction log, and translation log -------------------------------------------
 url <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vSa9Kqouso7Oq0CfebhpP7fgO3WxRoOdjyOcniLVoCMDTmwv9rK3GICDzsAvrH4iitc_tdJxS-yF4F4/pub?" 
 url2 <- "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_lU37EeYithWp_cTKsjAcFCXm8w8MTB7gPolFASyF8-MhvRNh-0BHu6VUiUL-YSJiM9gsPeVrXHgg/pub?" 
@@ -151,7 +150,7 @@ source("R/dataset_responses_check.R")
 
 ## Remove Extra columns ----------------------------------------------------------------------------
 # file.edit("R/remove_extra_columns.R")
-source("R/remove_extra_columns.R") # Check extra cols with Shabar
+source("R/remove_extra_columns.R")
 
 # generate data with missing translations ----------------------------------------------------------
 # file.edit("R/check_missing_translation.R")
@@ -248,4 +247,5 @@ writexl::write_xlsx(missing_translation_QA_log, "output/Missing_audio_translatio
 writexl::write_xlsx(qa_backlog_list, "output/QA_backlog.xlsx", format_headers = F)
 writexl::write_xlsx(response_log_list, "output/dataset_response_mismatch_with_tool.xlsx", format_headers = F)
 writexl::write_xlsx(logical_issues_list, "output/Logical_issues.xlsx", format_headers = F)
+writexl::write_xlsx(tool3_interview_issue, "output/Tool3_interview_issue.xlsx", format_headers = F)
 

@@ -501,6 +501,120 @@ response_crossmatch <- left_join(
 # Shabar confirmed that the responses don't have to be the same
 mismatch_male_fem_resp <- response_crossmatch %>% filter(Response_male %notin% Response_female)
 
+
+## Tool 3 ------------------------------------------------------------------------------------------
+elder_interviews <- t3_data_filtered %>% 
+  filter(Interview_Type %in% "Community Elders") %>% 
+  mutate(elder_reporting_CHW_presence = case_when(
+    Does_The_Community_Have_Community_Health_Workers_Chws %in% "Yes, male and female CHWs are available" ~ "both",
+    Does_The_Community_Have_Community_Health_Workers_Chws %in% "Yes, only female CHW is available" ~ "female",
+    Does_The_Community_Have_Community_Health_Workers_Chws %in% "Yes, only male CHW is available" ~ "male",
+    Does_The_Community_Have_Community_Health_Workers_Chws %in% "No" ~ "None",
+    TRUE ~ Does_The_Community_Have_Community_Health_Workers_Chws
+  ), 
+  elder_reporting_LHC_presence = case_when(
+    Does_The_Community_Have_Local_Health_Committee_Lhc_Members %in% "Yes, male and female member are available" ~ "both",
+    Does_The_Community_Have_Local_Health_Committee_Lhc_Members %in% "Yes, only female member is available" ~ "female",
+    Does_The_Community_Have_Local_Health_Committee_Lhc_Members %in% "Yes, only male member is available" ~ "male",
+    Does_The_Community_Have_Local_Health_Committee_Lhc_Members %in% "No" ~ "None",
+    TRUE ~ Does_The_Community_Have_Local_Health_Committee_Lhc_Members
+  ))
+chw_interviews <- t3_data_filtered %>% 
+  filter(Interview_Type %in% "Community Health Workers (CHWs)")
+lhc_interviews <- t3_data_filtered %>% 
+  filter(Interview_Type %in% "Local Health Committee/Shura Members")
+nrow(t3_data_filtered)==(nrow(elder_interviews)+nrow(chw_interviews)+nrow(lhc_interviews)) # CHeck: should be True
+
+
+# Tool 3 Interview type stats
+# CHW interview report
+chw_list <- chw_interviews %>% 
+  group_by(Site_Visit_ID, Village) %>%
+  reframe(CHW_interviewee_gender = paste0(Gender_Of_Interviewee, collapse = " - "),
+          total_male_CHW = length(which(Gender_Of_Interviewee %in% "Male")),
+          total_female_CHW = length(which(Gender_Of_Interviewee %in% "Female")),
+          total_interviews_CHW=n())
+chw_list %>% get_dupes(Site_Visit_ID, Village) # Check: should return NA
+# LHC interview report
+lhc_list <- lhc_interviews %>% 
+  group_by(Site_Visit_ID, Village) %>%
+  reframe(LHC_interviewee_gender = paste0(Gender_Of_Interviewee, collapse = " - "),
+          total_male_LHC = length(which(Gender_Of_Interviewee %in% "Male")),
+          total_female_LHC = length(which(Gender_Of_Interviewee %in% "Female")),
+          total_interviews_LHC=n())
+lhc_list %>% get_dupes(Site_Visit_ID, Village) # Check: should return NA
+
+# More than 1 community elder interview
+extra_interviews <- elder_interviews %>% 
+  group_by(Site_Visit_ID, Village, Interview_Type) %>% 
+  reframe(total_interviews=n()) %>% 
+  filter(total_interviews>1) %>% 
+  mutate(issue="More than 1 Community Elder interview in the village/site_visit") %>% 
+  left_join( # Join the CHW/LHC presence for these extra interviews
+    elder_interviews %>% 
+      select(Site_Visit_ID, Village, elder_reporting_LHC_presence, elder_reporting_CHW_presence) %>% 
+      group_by(Site_Visit_ID, Village) %>% 
+      reframe(elder_reporting_LHC_presence = paste0(elder_reporting_LHC_presence, collapse = " - "),
+              elder_reporting_CHW_presence = paste0(elder_reporting_CHW_presence, collapse = " - ")),
+    by=c("Site_Visit_ID", "Village")
+  ) %>% 
+  left_join(
+    chw_list,
+    by=c("Site_Visit_ID", "Village")
+  ) %>% 
+  left_join(
+    lhc_list,
+    by=c("Site_Visit_ID", "Village")
+  ) %>% 
+  relocate(elder_reporting_LHC_presence, .before = LHC_interviewee_gender)
+
+# Excluding more than 1 Community Elder interviews
+elder_chw_lhc_report <- elder_interviews %>% 
+  # filter(!(Site_Visit_ID %in% extra_interviews$Site_Visit_ID & Village %in% extra_interviews$Village)) %>% 
+  select(Site_Visit_ID, Village, elder_reporting_CHW_presence, elder_reporting_LHC_presence) %>% 
+  group_by(Site_Visit_ID, Village) %>% 
+  reframe(elder_reporting_LHC_presence = paste0(unique(elder_reporting_LHC_presence), collapse = " - "),
+          elder_reporting_CHW_presence = paste0(unique(elder_reporting_CHW_presence), collapse = " - ")
+         )
+
+## CHW Issues
+chw_issues <- chw_list %>% 
+  full_join( # Join Community Elder response
+    elder_chw_lhc_report %>% select(-elder_reporting_LHC_presence),
+    by=c("Site_Visit_ID", "Village")
+  ) %>% 
+  mutate(issue = case_when(
+    total_interviews_CHW > 2 ~ "There are more than 2 CHW interviews in the village/site_visit",
+    total_interviews_CHW == 2 & (total_male_CHW != 1 | total_female_CHW != 1) ~ "There are 2 CHW interviews but both are from male or female respondent",
+    is.na(total_interviews_CHW) & elder_reporting_CHW_presence %in% c("female", "male", "both") ~ "Elder confirms CHW presence but no CHW interview is conducted",
+    str_detect(elder_reporting_CHW_presence, " - ") ~ "More than one interview was done with Community Elder with inconsistent responses",
+    elder_reporting_CHW_presence %in% "both" & (total_male_CHW != 1 | total_female_CHW != 1) ~ "Community Elder reported both CHW present but one interview is missing",
+    elder_reporting_CHW_presence %in% c("female", "male") & total_interviews_CHW != 1 ~ "Community Elder only reported one CHW is present but there is more/less than 1 interview",
+    elder_reporting_CHW_presence %in% "male" & total_male_CHW != 1 ~ "Community Elder reported male CHW present but male interview is missing",
+    elder_reporting_CHW_presence %in% "female" & total_female_CHW != 1 ~ "Community Elder reported female CHW present but female interview is missing",
+    elder_reporting_CHW_presence %in% "None" & total_interviews_CHW != 0 ~ "Community Elder reported no CHW is present in village but we still have interviews",
+    )) %>% 
+  filter(!is.na(issue))
+
+## LHC Issues
+lhc_issues <- lhc_list %>% 
+  full_join( # Join Community Elder response
+    elder_chw_lhc_report %>% select(-elder_reporting_CHW_presence),
+    by=c("Site_Visit_ID", "Village")
+  ) %>% 
+  mutate(issue = case_when(
+    total_interviews_LHC > 2 ~ "There are more than 2 LHC interviews in the village/site_visit",
+    total_interviews_LHC == 2 & (total_male_LHC != 1 | total_female_LHC != 1) ~ "There are 2 LHC interviews but both are from male or female respondent",
+    is.na(total_interviews_LHC) & elder_reporting_LHC_presence %in% c("female", "male", "both") ~ "Elder confirms LHC presence but no LHC interview is conducted",
+    str_detect(elder_reporting_LHC_presence, " - ") ~ "More than one interview was done with Community Elder with inconsistent responses",
+    elder_reporting_LHC_presence %in% "both" & (total_male_LHC != 1 | total_female_LHC != 1) ~ "Community Elder reported both LHC present but one interview is missing",
+    elder_reporting_LHC_presence %in% c("female", "male") & total_interviews_LHC != 1 ~ "Community Elder only reported one LHC is present but there is more/less than 1 interview",
+    elder_reporting_LHC_presence %in% "male" & total_male_LHC != 1 ~ "Community Elder reported male LHC present but male interview is missing",
+    elder_reporting_LHC_presence %in% "female" & total_female_LHC != 1 ~ "Community Elder reported female LHC present but female interview is missing",
+    elder_reporting_LHC_presence %in% "None" & total_interviews_LHC != 0 ~ "Community Elder reported no LHC is present in village but we still have interviews",
+  )) %>% 
+  filter(!is.na(issue))
+
 # Rejected and approved data -----------------------------------------------------------------------
 rejec_approved <- rbind(
   hf_t1_data %>% filter(review_status %in% "REJECTED" & qa_status %in% "Approved") %>%
@@ -607,6 +721,11 @@ logical_issues_list <- list(
   repeat_sheet_issues=count_mismatch,
   mismatch_male_fem_resp=mismatch_male_fem_resp,
   rejec_approved=rejec_approved
+)
+tool3_interview_issue <- list(
+  "Community_elder_extra"=extra_interviews,
+  "CHW_Issues"=chw_issues,
+  "LHC_Issues"=lhc_issues
 )
 
 # Remove extra objects -----------------------------------------------------------------------------
