@@ -154,7 +154,7 @@ source("R/remove_extra_columns.R")
 
 # generate data with missing translations ----------------------------------------------------------
 # file.edit("R/check_missing_translation.R")
-source("R/check_missing_translation.R")
+source("R/check_missing_translation.R") # Temorary filter for QA at the end
 
 # Export -------------------------------------------------------------------------------------------
 ## Tool 1.1
@@ -238,7 +238,7 @@ export_datasets(t3_list_filtered, "output/client_data/HER_ESS_Tool_3_Community_L
 ## export additional files
 writexl::write_xlsx(correction_log, "output/correction_log.xlsx", format_headers = F) # correction
 writexl::write_xlsx(correction_log_issues, "output/correction_log_issues.xlsx", format_headers = F) # correction log issues
-# writexl::write_xlsx(translation_log_issues, "output/translation_log_issues.xlsx", format_headers = F) # correction log issues
+writexl::write_xlsx(translation_log_issues, "output/translation_log_issues.xlsx", format_headers = F) # correction log issues
 writexl::write_xlsx(correction_log_discrep, "output/correction_log_discrep.xlsx", format_headers = F)
 writexl::write_xlsx(missing_translation_log, "output/untranslated_log.xlsx", format_headers = F)
 writexl::write_xlsx(relevancy_issues, "output/relevancy_issues.xlsx", format_headers = F)

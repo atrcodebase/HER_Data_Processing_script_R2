@@ -178,7 +178,7 @@ t2_logical_issues <- rbind(
              grepl("Yes, more than one household member fell seriously ill – excluding myself", 
                    Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care) &
              str_count(Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care, ";") == 1 &
-             How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months <= 2) %>% 
+             as.numeric(How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months) <= 2) %>% 
     mutate(issue = "Selected responses and count of HH members does not match",
            Questions = "Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care - How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months",
            Values = paste0(Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care, " - ",How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months)) %>% 
@@ -186,7 +186,7 @@ t2_logical_issues <- rbind(
   t2_data_filtered %>% 
     filter(Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care %in% 
              "Yes, more than one household member fell seriously ill – excluding myself" &
-             How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months_More_Than_One < 2) %>% 
+             as.numeric(How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months_More_Than_One) < 2) %>% 
     mutate(issue = "Selected responses and count of HH members does not match",
            Questions = "Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care - How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months_More_Than_One",
            Values = paste0(Have_You_Or_Someone_In_Your_Household_Fallen_Seriously_Ill_In_The_Past_6_Months_That_Needed_Medical_Care, " - ",How_Many_Household_Members_Fell_Seriously_Ill_In_The_Past_6_Months_More_Than_One)) %>% 
@@ -476,30 +476,30 @@ missing_male_female_data <- rbind(
     mutate(KEY=Key_female, Key_female=NULL, issue="The Male respondent's interview is missing") 
 )
 
-## Responses cross match between male and female household members ---------------------------------
-overall_questions <- c("How_Many_Members_Are_In_Your_Household_Including_Yourself",	"How_Many_Members_Are_Currently_Living_In_Your_Household",
-                       "How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities", "Is_This_A_Female_Headed_Household", "Is_Your_Household_Headed_By_An_Elderly_Person",
-                       "Is_Your_Household_Headed_By_A_Child_Too_Young_To_Work")
-response_crossmatch <- left_join(
-  t2_data_filtered %>%
-    filter(Consent != "No" & Interviewee_Respondent_Type %in% "Male member of HH" &
-             Do_You_Agree_If_My_Female_Colleague_Interview_A_Female_Member_Of_Your_Household %in% "Yes") %>%
-    select(Key_male=KEY, Province, District, Village, HF_Code_based_on_sample, HF_Name_based_on_Sample, Survey_Number,
-           all_of(overall_questions)) %>%
-    mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")) %>%
-    mutate(across(all_of(overall_questions), as.character)) %>% 
-    pivot_longer(all_of(overall_questions), names_to = "questions",  values_to = "Response_male"),
-  t2_data_filtered %>%
-    filter(Consent != "No" & Interviewee_Respondent_Type %in% "Female member of HH") %>%
-    select(Key_female=KEY, Province, District, Village, HF_Code_based_on_sample, HF_Name_based_on_Sample, Survey_Number,
-           all_of(overall_questions)) %>%
-    mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")) %>%
-    mutate(across(all_of(overall_questions), as.character)) %>% 
-    pivot_longer(all_of(overall_questions), names_to = "questions",  values_to = "Response_female")) %>%
-  relocate(Key_female, .after = Key_male)
-
-# Shabar confirmed that the responses don't have to be the same
-mismatch_male_fem_resp <- response_crossmatch %>% filter(Response_male %notin% Response_female)
+# ## Responses cross match between male and female household members ---------------------------------
+# overall_questions <- c("How_Many_Members_Are_In_Your_Household_Including_Yourself",	"How_Many_Members_Are_Currently_Living_In_Your_Household",
+#                        "How_Many_Of_These_Members_Are_Engaged_In_Income_Earning_Activities", "Is_This_A_Female_Headed_Household", "Is_Your_Household_Headed_By_An_Elderly_Person",
+#                        "Is_Your_Household_Headed_By_A_Child_Too_Young_To_Work")
+# response_crossmatch <- left_join(
+#   t2_data_filtered %>%
+#     filter(Consent != "No" & Interviewee_Respondent_Type %in% "Male member of HH" &
+#              Do_You_Agree_If_My_Female_Colleague_Interview_A_Female_Member_Of_Your_Household %in% "Yes") %>%
+#     select(Key_male=KEY, Province, District, Village, HF_Code_based_on_sample, HF_Name_based_on_Sample, Survey_Number,
+#            all_of(overall_questions)) %>%
+#     mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")) %>%
+#     mutate(across(all_of(overall_questions), as.character)) %>% 
+#     pivot_longer(all_of(overall_questions), names_to = "questions",  values_to = "Response_male"),
+#   t2_data_filtered %>%
+#     filter(Consent != "No" & Interviewee_Respondent_Type %in% "Female member of HH") %>%
+#     select(Key_female=KEY, Province, District, Village, HF_Code_based_on_sample, HF_Name_based_on_Sample, Survey_Number,
+#            all_of(overall_questions)) %>%
+#     mutate(Survey_Number = str_remove_all(Survey_Number, "HH|-Male|-Female")) %>%
+#     mutate(across(all_of(overall_questions), as.character)) %>% 
+#     pivot_longer(all_of(overall_questions), names_to = "questions",  values_to = "Response_female")) %>%
+#   relocate(Key_female, .after = Key_male)
+# 
+# # Shabar confirmed that the responses don't have to be the same
+# mismatch_male_fem_resp <- response_crossmatch %>% filter(Response_male %notin% Response_female)
 
 
 ## Tool 3 ------------------------------------------------------------------------------------------
@@ -719,7 +719,7 @@ logical_issues_list <- list(
   duplicate_survey_numbers=duplicate_survey_numbers,
   missing_male_female_data=missing_male_female_data,
   repeat_sheet_issues=count_mismatch,
-  mismatch_male_fem_resp=mismatch_male_fem_resp,
+  # mismatch_male_fem_resp=mismatch_male_fem_resp,
   rejec_approved=rejec_approved
 )
 tool3_interview_issue <- list(

@@ -45,6 +45,11 @@ translation_log_issues <- translation_log_filtered %>%
   filter(!is.na(issue) | duplicates == TRUE) %>%
   arrange(KEY, question)
 
+# Join QA_Status with the issues
+translation_log_issues <- translation_log_issues %>% 
+  left_join(select(qa_log_sub, -Tool), by="KEY") %>% 
+  filter(qa_status %in% c("Approved", "Excel Check Approved")) # Filtering issues of approved data only (QA)
+
 translation_log_filtered <- translation_log_filtered %>% 
   # filter(is.na(issue) & duplicates == FALSE) # Keeping duplicates for now
   filter(is.na(issue))

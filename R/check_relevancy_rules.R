@@ -116,6 +116,9 @@ t1.3_SM_issues <- check_select_multiple(data=hf_t3_data,
 t2_data <- update_series_cols(data=t2_data,
                                  tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
                                  question_separator="_")
+t2_income <- update_series_cols(data=t2_income,
+                              tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
+                              question_separator="_")
 t2_other <- update_series_cols(data=t2_other,
                               tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
                               question_separator="_")
@@ -129,15 +132,16 @@ t2_data <- t2_data %>%
   ))
 
 # Check if updated correctly
-t2_SM_issues <- check_select_multiple(data=t2_data,
-                                      tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
-                                      question_separator="_")
-t2_other_SM_issues <- check_select_multiple(data=t2_other,
-                                      tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
-                                      question_separator="_")
 t2_SM_issues <- rbind(
-  t2_SM_issues,
-  t2_other_SM_issues
+  check_select_multiple(data=t2_data,
+                        tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
+                        question_separator="_"),
+  check_select_multiple(data=t2_income,
+                        tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
+                        question_separator="_"),
+  check_select_multiple(data=t2_other,
+                        tool_path = "input/tools/HER+ESS+Tool+2_+Household+Level+Surveys+-++R3.xlsx",
+                        question_separator="_")
 )
 
 ### Tool 3
